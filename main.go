@@ -17,14 +17,6 @@ type Game struct {
 	Black string
 }
 
-func main() {
-	addr := host + ":" + port
-	log.Printf("Starting server at http://%s\n", addr)
-	http.HandleFunc("/", makeHandler(rootHandler))
-	http.HandleFunc("/game/", makeHandler(gameHandler))
-	http.ListenAndServe(addr, nil)
-}
-
 // Wraps a route handler in a closure, then logs the request address, method,
 // and path, plus the status code returned by the handler
 func makeHandler(fn func(http.ResponseWriter, *http.Request) int) http.HandlerFunc {
@@ -36,6 +28,10 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request) int) http.HandlerFu
 
 // Renders the home template
 func rootHandler(w http.ResponseWriter, r *http.Request) int {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return 404
+	}
 	renderTemplate(w, "index", nil)
 	return 200
 }
@@ -55,4 +51,12 @@ func gameHandler(w http.ResponseWriter, r *http.Request) int {
 // Loads a game for a provided id
 func loadGame(id int) *Game {
 	return &Game{Id: id, White: "John", Black: "Frank"}
+}
+
+func main() {
+	addr := host + ":" + port
+	log.Printf("Starting server at http://%s\n", addr)
+	http.HandleFunc("/", makeHandler(rootHandler))
+	http.HandleFunc("/game/", makeHandler(gameHandler))
+	http.ListenAndServe(addr, nil)
 }
