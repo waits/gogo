@@ -32,7 +32,10 @@ func rootHandler(w http.ResponseWriter, r *http.Request) int {
 		http.NotFound(w, r)
 		return 404
 	}
-	renderTemplate(w, "index", nil)
+	err := renderTemplate(w, "index", nil)
+	if err != nil {
+		return 500
+	}
 	return 200
 }
 
@@ -44,7 +47,10 @@ func gameHandler(w http.ResponseWriter, r *http.Request) int {
 		return 404
 	}
 	game := loadGame(id)
-	renderTemplate(w, "game", game)
+	err = renderTemplate(w, "game", game)
+	if err != nil {
+		return 500
+	}
 	return 200
 }
 
