@@ -2,14 +2,20 @@
 package main
 
 import (
+	"flag"
 	"log"
+	"html/template"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-const host = "localhost"
-const port = "8080"
+var (
+	httpAddr     = flag.String("http", "localhost:8080", "HTTP listen address")
+	templatePath = flag.String("template", "template/", "path to template files")
+	staticPath   = flag.String("static", "static/", "path to static files")
+	reload       = flag.Bool("reload", false, "reload templates on every page load")
+	templates    = template.Must(template.ParseGlob(*templatePath + "*.tmpl"))
+)
 
 type Game struct {
 	Id    int
@@ -26,43 +32,28 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request) int) http.HandlerFu
 	}
 }
 
-// Renders the home template
-func rootHandler(w http.ResponseWriter, r *http.Request) int {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return 404
-	}
-	err := renderTemplate(w, "index", nil)
-	if err != nil {
-		return 500
-	}
-	return 200
-}
-
-// Renders the game template
-func gameHandler(w http.ResponseWriter, r *http.Request) int {
-	id, err := strconv.Atoi(r.URL.Path[6:])
-	if err != nil {
-		http.NotFound(w, r)
-		return 404
-	}
-	game := loadGame(id)
-	err = renderTemplate(w, "game", game)
-	if err != nil {
-		return 500
-	}
-	return 200
-}
-
 // Loads a game for a provided id
 func loadGame(id int) *Game {
 	return &Game{Id: id, White: "John", Black: "Frank"}
 }
 
+// Renders an HTML template from the cache using provided data
+func renderTemplate(w http.ResponseWriter, action string, data interface{}) error {
+	if *reload {
+		templates = template.Must(template.ParseGlob(*templatePath + "*.tmpl"))
+	}
+	err := templates.ExecuteTemplate(w, action+".tmpl", data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
-	addr := host + ":" + port
-	log.Printf("Starting server at http://%s\n", addr)
+	flag.Parse()
+
+	log.Printf("Starting server at http://%s\n", *httpAddr)
 	http.HandleFunc("/", makeHandler(rootHandler))
 	http.HandleFunc("/game/", makeHandler(gameHandler))
-	http.ListenAndServe(addr, nil)
+	http.ListenAndServe(*httpAddr, nil)
 }
