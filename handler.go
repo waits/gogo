@@ -1,39 +1,48 @@
 package main
 
-import "net/http"
-import "strconv"
+import (
+	"errors"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+)
+
+type reqHandler func(http.ResponseWriter, *http.Request) (int, error)
+
+// ServeHTTP is called on a reqHandler by net/http; Satisfies http.Handler
+func (fn reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	status, err := fn(w, r)
+	if err != nil {
+		switch status {
+		case http.StatusNotFound:
+			http.NotFound(w, r)
+		default:
+			status = 500
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		}
+	}
+	log.Printf("%s %s %s %d", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path, status)
+}
 
 // Renders the home and about templates
-func rootHandler(w http.ResponseWriter, r *http.Request) int {
-	var err error
+func rootHandler(w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.URL.Path {
 	case "/":
-		err = renderTemplate(w, "home", nil)
+		return http.StatusOK, renderTemplate(w, "home", nil)
 	case "/about":
-		err = renderTemplate(w, "about", nil)
+		return http.StatusOK, renderTemplate(w, "about", nil)
 	default:
-		http.NotFound(w, r)
-		return 404
+		return http.StatusNotFound, errors.New("handler: page not found")
 	}
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return 500
-	}
-	return 200
 }
 
 // Renders the game template
-func gameHandler(w http.ResponseWriter, r *http.Request) int {
+func gameHandler(w http.ResponseWriter, r *http.Request) (int, error) {
 	id, err := strconv.Atoi(r.URL.Path[6:])
 	if err != nil {
-		http.NotFound(w, r)
-		return 404
+		return http.StatusNotFound, err
 	}
 	game := loadGame(id)
-	err = renderTemplate(w, "game", game)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return 500
-	}
-	return 200
+	return http.StatusOK, renderTemplate(w, "game", game)
 }

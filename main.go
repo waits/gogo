@@ -5,7 +5,6 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"strings"
 )
 
 var (
@@ -28,18 +27,9 @@ func init() {
 
 func main() {
 	log.Printf("Starting server at http://%s\n", *httpAddr)
-	http.HandleFunc("/", makeHandler(rootHandler))
-	http.HandleFunc("/game/", makeHandler(gameHandler))
+	http.Handle("/", reqHandler(rootHandler))
+	http.Handle("/game/", reqHandler(gameHandler))
 	http.ListenAndServe(*httpAddr, nil)
-}
-
-// Wraps a route handler in a closure, then logs the request address, method,
-// and path, plus the status code returned by the handler
-func makeHandler(fn func(http.ResponseWriter, *http.Request) int) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		status := fn(w, r)
-		log.Printf("%s %s %s %d", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path, status)
-	}
 }
 
 // Loads a game for a provided id
