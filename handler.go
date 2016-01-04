@@ -3,14 +3,20 @@ package main
 import "net/http"
 import "strconv"
 
-// Renders the home template
+// Renders the home and about templates
 func rootHandler(w http.ResponseWriter, r *http.Request) int {
-	if r.URL.Path != "/" {
+	var err error
+	switch r.URL.Path {
+	case "/":
+		err = renderTemplate(w, "home", nil)
+	case "/about":
+		err = renderTemplate(w, "about", nil)
+	default:
 		http.NotFound(w, r)
 		return 404
 	}
-	err := renderTemplate(w, "index", nil)
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return 500
 	}
 	return 200
@@ -26,6 +32,7 @@ func gameHandler(w http.ResponseWriter, r *http.Request) int {
 	game := loadGame(id)
 	err = renderTemplate(w, "game", game)
 	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return 500
 	}
 	return 200

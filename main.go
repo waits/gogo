@@ -4,7 +4,6 @@ package main
 import (
 	"flag"
 	"log"
-	"html/template"
 	"net/http"
 	"strings"
 )
@@ -14,7 +13,6 @@ var (
 	templatePath = flag.String("template", "template/", "path to template files")
 	staticPath   = flag.String("static", "static/", "path to static files")
 	reload       = flag.Bool("reload", false, "reload templates on every page load")
-	templates    = template.Must(template.ParseGlob(*templatePath + "*.tmpl"))
 )
 
 type Game struct {
@@ -35,18 +33,6 @@ func makeHandler(fn func(http.ResponseWriter, *http.Request) int) http.HandlerFu
 // Loads a game for a provided id
 func loadGame(id int) *Game {
 	return &Game{Id: id, White: "John", Black: "Frank"}
-}
-
-// Renders an HTML template from the cache using provided data
-func renderTemplate(w http.ResponseWriter, action string, data interface{}) error {
-	if *reload {
-		templates = template.Must(template.ParseGlob(*templatePath + "*.tmpl"))
-	}
-	err := templates.ExecuteTemplate(w, action+".tmpl", data)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func main() {
