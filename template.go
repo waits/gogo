@@ -9,13 +9,9 @@ import (
 
 var templates map[string]*template.Template
 
-func init() {
-	templates = make(map[string]*template.Template)
-	loadTemplates()
-}
-
 // Loads all templates into memory (layout and content)
 func loadTemplates() {
+	templates = make(map[string]*template.Template)
 	pages, err := filepath.Glob(*templatePath + "content/*.tmpl")
 	if err != nil {
 		panic(err)
@@ -35,7 +31,7 @@ func renderTemplate(w http.ResponseWriter, name string, data interface{}) error 
 	if *reload {
 		loadTemplates()
 	}
-	tmpl, ok := templates[name + ".tmpl"]
+	tmpl, ok := templates[name+".tmpl"]
 	if !ok {
 		return errors.New("renderTemplate: template does not exist")
 	}
