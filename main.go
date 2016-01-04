@@ -3,6 +3,7 @@ package main
 
 import (
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 )
@@ -11,8 +12,12 @@ var (
 	httpAddr     = flag.String("http", "localhost:8080", "HTTP listen address")
 	templatePath = flag.String("template", "template/", "path to template files")
 	staticPath   = flag.String("static", "static/", "path to static files")
-	reload       = flag.Bool("reload", false, "reload templates on every page load")
+	reload       = flag.Bool("reload", false, "reload templates for every request")
 )
+
+type Context struct {
+	Templates map[string]*template.Template
+}
 
 type Game struct {
 	Id    int
@@ -20,15 +25,17 @@ type Game struct {
 	Black string
 }
 
-func init() {
-	flag.Parse()
-	loadTemplates()
-}
-
 func main() {
+	flag.Parse()
+	t := loadTemplates()
+	if *reload {
+		t = nil
+	}
+	c := &Context{t}
+
 	log.Printf("Starting server at http://%s\n", *httpAddr)
-	http.Handle("/", reqHandler(rootHandler))
-	http.Handle("/game/", reqHandler(gameHandler))
+	http.Handle("/", reqHandler{c, rootHandler})
+	http.Handle("/game/", reqHandler{c, gameHandler})
 	http.ListenAndServe(*httpAddr, nil)
 }
 

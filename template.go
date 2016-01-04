@@ -7,11 +7,9 @@ import (
 	"path/filepath"
 )
 
-var templates map[string]*template.Template
-
 // Loads all templates into memory (layout and content)
-func loadTemplates() {
-	templates = make(map[string]*template.Template)
+func loadTemplates() map[string]*template.Template {
+	templates := make(map[string]*template.Template)
 	pages, err := filepath.Glob(*templatePath + "content/*.tmpl")
 	if err != nil {
 		panic(err)
@@ -24,14 +22,16 @@ func loadTemplates() {
 		files := append(layouts, page)
 		templates[filepath.Base(page)] = template.Must(template.ParseFiles(files...))
 	}
+	return templates
 }
 
 // Renders an HTML template from the cache using provided data
-func renderTemplate(w http.ResponseWriter, name string, data interface{}) error {
-	if *reload {
-		loadTemplates()
+func renderTemplate(c *Context, w http.ResponseWriter, name string, data interface{}) error {
+	tmpls := c.Templates
+	if c.Templates == nil {
+		tmpls = loadTemplates()
 	}
-	tmpl, ok := templates[name+".tmpl"]
+	tmpl, ok := tmpls[name+".tmpl"]
 	if !ok {
 		return errors.New("renderTemplate: template does not exist")
 	}
