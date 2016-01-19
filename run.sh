@@ -10,7 +10,8 @@ quit() {
     wait
 }
 
-go build
-./playgo --reload &
-open "http://localhost:8080"
-wait %1
+if go build; then
+    ./playgo --reload &
+    open "http://localhost:8080"
+    wait %1
+fi

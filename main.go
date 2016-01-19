@@ -19,12 +19,6 @@ type Context struct {
 	Templates map[string]*template.Template
 }
 
-type Game struct {
-	Id    int
-	White string
-	Black string
-}
-
 func main() {
 	flag.Parse()
 	t := loadTemplates()
@@ -37,9 +31,4 @@ func main() {
 	http.Handle("/", reqHandler{c, rootHandler})
 	http.Handle("/game/", reqHandler{c, gameHandler})
 	http.ListenAndServe(*httpAddr, nil)
-}
-
-// Loads a game for a provided id
-func loadGame(id int) *Game {
-	return &Game{Id: id, White: "John", Black: "Frank"}
 }

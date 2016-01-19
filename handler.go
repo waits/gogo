@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -42,10 +41,19 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 
 // Renders the game template
 func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
-	id, err := strconv.Atoi(r.URL.Path[6:])
-	if err != nil {
-		return http.StatusNotFound, err
+	id := r.URL.Path[6:]
+	/*
+		if err != nil {
+			return http.StatusNotFound, err
+		}
+	*/
+	var game *Game
+	if id == "new" {
+		game = createGame("Bob", "Mary")
+		http.Redirect(w, r, "/game/"+game.Id, 303)
+		return 303, nil
+	} else {
+		game = loadGame(id)
 	}
-	game := loadGame(id)
 	return http.StatusOK, renderTemplate(c, w, "game", game)
 }
