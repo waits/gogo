@@ -1,9 +1,11 @@
-package main
+package model
 
-import "crypto/sha256"
-import "encoding/hex"
-import "strconv"
-import "time"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"strconv"
+	"time"
+)
 
 type Game struct {
 	Id       string
@@ -17,7 +19,7 @@ type Game struct {
 }
 
 // Create a game using a hash of the game parameters as an ID
-func createGame(white string, black string) *Game {
+func NewGame(white string, black string) *Game {
 	time := time.Now().Unix()
 	uniq := []byte(strconv.FormatInt(time, 10) + white + black)
 	checksum := sha256.Sum224(uniq)
@@ -28,7 +30,7 @@ func createGame(white string, black string) *Game {
 }
 
 // Loads a game for a provided id
-func loadGame(id string) *Game {
+func LoadGame(id string) *Game {
 	game := &Game{Id: id, White: "Frank", Black: "Joe", Size: 19, Turn: 0}
 	return game
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"playgo/model"
 	"strings"
 )
 
@@ -47,13 +48,13 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 			return http.StatusNotFound, err
 		}
 	*/
-	var game *Game
+	var game *model.Game
 	if id == "new" {
-		game = createGame("Bob", "Mary")
+		game = model.NewGame("Bob", "Mary")
 		http.Redirect(w, r, "/game/"+game.Id, 303)
 		return 303, nil
 	} else {
-		game = loadGame(id)
+		game = model.LoadGame(id)
 	}
 	return http.StatusOK, renderTemplate(c, w, "game", game)
 }
