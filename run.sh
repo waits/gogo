@@ -4,14 +4,20 @@ trap 'quit' INT
 
 quit() {
     trap '' INT TERM
-    echo "Shutting down..."
+    echo "Shutting down...\n"
     kill -TERM 0
-    rm playgo
-    wait
+    exit 1
 }
 
-if go build; then
-    ./playgo --reload &
-    open "http://localhost:8080"
-    wait %1
+if ! go build; then
+    exit 2
 fi
+
+./playgo --reload &
+if ! ps -p $! >&-; then
+    echo "Failed to start application."
+    exit 3
+fi
+
+open "http://localhost:8080"
+wait %1

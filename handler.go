@@ -22,6 +22,7 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 		default:
 			status = 500
+			panic(err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}
@@ -48,13 +49,15 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 			return http.StatusNotFound, err
 		}
 	*/
-	var game *model.Game
 	if id == "new" {
-		game = model.NewGame("Bob", "Mary")
+		game := model.NewGame("Bob", "Mary")
 		http.Redirect(w, r, "/game/"+game.Id, 303)
 		return 303, nil
 	} else {
-		game = model.LoadGame(id)
+		game, err := model.LoadGame(id)
+		if err != nil {
+			return http.StatusNotFound, err
+		}
+		return http.StatusOK, renderTemplate(c, w, "game", game)
 	}
-	return http.StatusOK, renderTemplate(c, w, "game", game)
 }

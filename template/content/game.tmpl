@@ -1,8 +1,8 @@
 {{define "title"}}Game #{{.Id}}{{end}}
 {{define "content"}}
-<h1>Game #{{.Id}}</h1>
+<h1>{{.Black}} vs. {{.White}}</h1>
 
-<div>{{.White}} vs. {{.Black}}</div>
+<h2>Turn #{{.Turn}}: {{.Up}}</h2>
 
 <a href="/">Home</a>
 {{end}}
