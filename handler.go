@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"playgo/model"
+	"strconv"
 	"strings"
 )
 
@@ -20,9 +21,10 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch status {
 		case http.StatusNotFound:
 			http.NotFound(w, r)
+		case http.StatusBadRequest:
+			http.Error(w, err.Error(), status)
 		default:
-			status = 500
-			panic(err)
+			status = http.StatusInternalServerError
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}
@@ -43,17 +45,16 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 
 // Renders the game template
 func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
-	id := r.URL.Path[6:]
-	/*
-		if err != nil {
-			return http.StatusNotFound, err
+	if r.Method == "POST" {
+		size, _ := strconv.Atoi(r.FormValue("size"))
+		if size > 19 || size < 9 {
+			return http.StatusBadRequest, errors.New("gameHandler: invalid board size")
 		}
-	*/
-	if id == "new" {
-		game := model.NewGame("Bob", "Mary")
+		game := model.NewGame(r.FormValue("black"), r.FormValue("white"), uint8(size))
 		http.Redirect(w, r, "/game/"+game.Id, 303)
-		return 303, nil
+		return http.StatusSeeOther, nil
 	} else {
+		id := r.URL.Path[6:]
 		game, err := model.LoadGame(id)
 		if err != nil {
 			return http.StatusNotFound, err

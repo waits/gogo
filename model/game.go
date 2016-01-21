@@ -19,14 +19,14 @@ type Game struct {
 }
 
 // Create a game using a hash of the game parameters as an ID
-func NewGame(black string, white string) *Game {
+func NewGame(black string, white string, size uint8) *Game {
 	time := time.Now().Unix()
 	uniq := []byte(strconv.FormatInt(time, 10) + white + black)
 	checksum := sha256.Sum224(uniq)
 	trunc := checksum[:7]
 	hexid := hex.EncodeToString(trunc)
 
-	g := &Game{Id: hexid, White: white, Black: black, Size: 19, Turn: 1}
+	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	client.Cmd("HMSET", "game:"+hexid, "black", g.Black, "white", g.White, "size", g.Size, "turn", g.Turn)
 	return g
 }

@@ -1,6 +1,14 @@
 {{define "title"}}Play Go{{end}}
 {{define "content"}}
 <h1>Play Go</h1>
-<a href="/game/new">New game</a>
+
+<form method="post" action="/game/new">
+  <strong>New Game</strong>
+  <input name="black" placeholder="Black" />
+  <input name="white" placeholder="White" />
+  <input name="size" type="number" placeholder="Board size" />
+  <button type="submit">Start Game</button>
+</form>
+
 <a href="/about">About</a>
 {{end}}
