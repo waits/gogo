@@ -28,6 +28,7 @@ func NewGame(black string, white string, size uint8) *Game {
 
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	client.Cmd("HMSET", "game:"+hexid, "black", g.Black, "white", g.White, "size", g.Size, "turn", g.Turn)
+	client.Cmd("EXPIRE", "game:"+hexid, 86400*7)
 	return g
 }
 
