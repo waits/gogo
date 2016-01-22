@@ -3,6 +3,8 @@ package model
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"github.com/garyburd/redigo/redis"
 	"strconv"
 	"time"
 )
@@ -18,7 +20,7 @@ type Game struct {
 	Captured [2]uint8
 }
 
-// Create a game using a hash of the game parameters as an ID
+// Creates a game using a hash of the game parameters as an ID
 func NewGame(black string, white string, size uint8) *Game {
 	time := time.Now().Unix()
 	uniq := []byte(strconv.FormatInt(time, 10) + white + black + strconv.Itoa(int(size)))
@@ -27,16 +29,18 @@ func NewGame(black string, white string, size uint8) *Game {
 	hexid := hex.EncodeToString(trunc)
 
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
-	client.Cmd("HMSET", "game:"+hexid, "black", g.Black, "white", g.White, "size", g.Size, "turn", g.Turn)
-	client.Cmd("EXPIRE", "game:"+hexid, 86400*7)
+	conn.Do("HMSET", "game:"+hexid, "black", g.Black, "white", g.White, "size", strconv.Itoa(int(g.Size)), "turn", strconv.Itoa(int(g.Turn)))
+	conn.Do("EXPIRE", "game:"+hexid, 86400*7)
 	return g
 }
 
 // Loads a game for a provided id
 func LoadGame(id string) (*Game, error) {
-	resp, err := client.Cmd("HGETALL", "game:"+id).Map()
+	resp, err := redis.StringMap(conn.Do("HGETALL", "game:"+id))
 	if err != nil {
 		return nil, err
+	} else if len(resp) == 0 {
+		return nil, errors.New("LoadGame: game not found")
 	}
 	size, _ := strconv.Atoi(resp["size"])
 	turn, _ := strconv.Atoi(resp["turn"])
@@ -44,6 +48,7 @@ func LoadGame(id string) (*Game, error) {
 	return g, nil
 }
 
+// Returns the name of the current player
 func (g *Game) Up() string {
 	if g.Turn % 2 == 0 {
 		return g.Black
