@@ -22,14 +22,12 @@ type Game struct {
 
 // Creates a game using a hash of the game parameters as an ID
 func NewGame(black string, white string, size uint8) *Game {
-	time := time.Now().Unix()
-	uniq := []byte(strconv.FormatInt(time, 10) + white + black + strconv.Itoa(int(size)))
-	checksum := sha256.Sum224(uniq)
-	hexid := hex.EncodeToString(checksum[:8])
-
+	sizestr := strconv.Itoa(int(size))
+	turnstr := strconv.Itoa(1)
+	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
-	conn.Do("HMSET", "game:"+hexid, "black", g.Black, "white", g.White, "size", strconv.Itoa(int(g.Size)), "turn", strconv.Itoa(int(g.Turn)))
-	conn.Do("EXPIRE", "game:"+hexid, 86400*7)
+	conn.Do("HMSET", "game:"+g.Id, "black", g.Black, "white", g.White, "size", sizestr, "turn", turnstr)
+	conn.Do("EXPIRE", "game:"+g.Id, 86400*7)
 	return g
 }
 
@@ -54,4 +52,12 @@ func (g *Game) Up() string {
 	} else {
 		return g.White
 	}
+}
+
+func hashGameParams(params string) string {
+	time := time.Now().Unix()
+	uniq := []byte(strconv.FormatInt(time, 10) + params)
+	checksum := sha256.Sum224(uniq)
+	hexid := hex.EncodeToString(checksum[:8])
+	return hexid
 }
