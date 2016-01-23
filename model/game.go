@@ -25,8 +25,7 @@ func NewGame(black string, white string, size uint8) *Game {
 	time := time.Now().Unix()
 	uniq := []byte(strconv.FormatInt(time, 10) + white + black + strconv.Itoa(int(size)))
 	checksum := sha256.Sum224(uniq)
-	trunc := checksum[:7]
-	hexid := hex.EncodeToString(trunc)
+	hexid := hex.EncodeToString(checksum[:8])
 
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	conn.Do("HMSET", "game:"+hexid, "black", g.Black, "white", g.White, "size", strconv.Itoa(int(g.Size)), "turn", strconv.Itoa(int(g.Turn)))
@@ -50,7 +49,7 @@ func LoadGame(id string) (*Game, error) {
 
 // Returns the name of the current player
 func (g *Game) Up() string {
-	if g.Turn % 2 == 0 {
+	if g.Turn%2 == 0 {
 		return g.Black
 	} else {
 		return g.White
