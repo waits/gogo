@@ -59,6 +59,13 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		if err != nil {
 			return http.StatusNotFound, err
 		}
-		return http.StatusOK, renderTemplate(c, w, "game", game)
+		if r.Method == "PATCH" {
+			x, _ := strconv.Atoi(r.FormValue("x"))
+			y, _ := strconv.Atoi(r.FormValue("y"))
+			game.Save(x, y)
+			return http.StatusOK, nil
+		} else {
+			return http.StatusOK, renderTemplate(c, w, "game", game)
+		}
 	}
 }

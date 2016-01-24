@@ -7,7 +7,7 @@ import (
 // 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"strconv"
-	"strings"
+// 	"strings"
 	"time"
 )
 
@@ -30,18 +30,6 @@ func hashGameParams(params string) string {
 	return hexid
 }
 
-// Creates a game using a hash of the game parameters as an ID
-func New(black string, white string, size int) *Game {
-	sizestr := strconv.Itoa(size)
-	turnstr := strconv.Itoa(1)
-	hexid := hashGameParams(black + white + turnstr)
-	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
-	conn.Do("HMSET", "game:"+g.Id, "black", g.Black, "white", g.White, "size", sizestr, "turn", turnstr)
-	conn.Do("EXPIRE", "game:"+g.Id, 86400*7)
-	conn.Do("SETEX", "game:board:"+g.Id, 86400*7, strings.Repeat("0", size * size))
-	return g
-}
-
 // Loads a game for a provided id
 func Load(id string) (*Game, error) {
 	resp, err := redis.StringMap(conn.Do("HGETALL", "game:"+id))
@@ -54,19 +42,50 @@ func Load(id string) (*Game, error) {
 	turn, _ := strconv.Atoi(resp["turn"])
 	g := &Game{Id: id, Black: resp["black"], White: resp["white"], Size: size, Turn: turn}
 
-	bstr, err := redis.String(conn.Do("GET", "game:board:"+id))
-	if len(bstr) != size * size {
-		return nil, errors.New("game.Load: game board is corrupt")
-	}
+	grid, err := redis.String(conn.Do("GET", "game:board:"+id))
 	g.Board = make([][]int8, size)
 	for x := range g.Board {
 		g.Board[x] = make([]int8, size)
-		for y := range g.Board[x] {
-			g.Board[x][y] = int8(bstr[x*y]) - 48
+		if len(grid) == size * size {
+			for y := range g.Board[x] {
+				g.Board[x][y] = int8(grid[x*size+y]) - 48
+			}
 		}
 	}
 
 	return g, nil
+}
+
+// Creates a game using a hash of the game parameters as an ID
+func New(black string, white string, size int) *Game {
+	sizestr := strconv.Itoa(size)
+	turnstr := strconv.Itoa(1)
+	hexid := hashGameParams(black + white + turnstr)
+	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
+	conn.Do("HMSET", "game:"+g.Id, "black", g.Black, "white", g.White, "size", sizestr, "turn", turnstr)
+	conn.Do("EXPIRE", "game:"+g.Id, 86400*7)
+	return g
+}
+
+// Makes a move at a given point and saves the game
+func (g *Game) Save(mx int, my int) bool {
+	g.Turn += 1
+	g.Board[mx][my] = int8(g.Turn % 2 + 1)
+
+	var grid string
+	for _, x := range g.Board {
+		for _, y := range x {
+			grid += strconv.Itoa(int(y))
+		}
+	}
+
+	_, err := conn.Do("SET", "game:board:"+g.Id, grid)
+	if err != nil {
+		return false
+	} else {
+		conn.Do("HINCRBY", "game:"+g.Id, "turn", 1)
+		return true
+	}
 }
 
 // Returns the name of the current player
