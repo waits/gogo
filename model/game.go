@@ -4,10 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-// 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"strconv"
-// 	"strings"
 	"time"
 )
 
