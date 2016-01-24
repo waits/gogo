@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const StaleGameExpiration = 60 * 60 * 24 * 2
+
 type Game struct {
 	Id       string
 	Black    string
@@ -68,12 +70,12 @@ func New(black string, white string, size int) (*Game, error) {
 	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	conn.Do("HMSET", "game:"+g.Id, "black", g.Black, "white", g.White, "size", sizestr, "turn", turnstr)
-	conn.Do("EXPIRE", "game:"+g.Id, 86400*7)
+	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 	return g, nil
 }
 
 // Makes a move at a given point and saves the game
-func (g *Game) Save(mx int, my int) bool {
+func (g *Game) Save(mx int, my int) {
 	g.Turn += 1
 	g.Board[my][mx] = int8(g.Turn % 2 + 1)
 
@@ -84,13 +86,9 @@ func (g *Game) Save(mx int, my int) bool {
 		}
 	}
 
-	_, err := conn.Do("SET", "game:board:"+g.Id, grid)
-	if err != nil {
-		return false
-	} else {
-		conn.Do("HINCRBY", "game:"+g.Id, "turn", 1)
-		return true
-	}
+	conn.Do("HINCRBY", "game:"+g.Id, "turn", 1)
+	conn.Do("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
+	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 }
 
 // Returns the name of the current player
