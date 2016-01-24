@@ -34,7 +34,7 @@ func Load(id string) (*Game, error) {
 	if err != nil {
 		return nil, err
 	} else if len(resp) == 0 {
-		return nil, errors.New("game.Load: game not found")
+		return nil, errors.New("Load game: game not found")
 	}
 	size, _ := strconv.Atoi(resp["size"])
 	turn, _ := strconv.Atoi(resp["turn"])
@@ -55,14 +55,21 @@ func Load(id string) (*Game, error) {
 }
 
 // Creates a game using a hash of the game parameters as an ID
-func New(black string, white string, size int) *Game {
+func New(black string, white string, size int) (*Game, error) {
+	if size > 19 || size < 9 || size % 2 == 0 {
+		return nil, errors.New("New game: invalid board size")
+	} else if len(black) == 0 || len(white) == 0 {
+		return nil, errors.New("New game: missing player name(s)")
+	} else if len(black) > 35 || len(white) > 35 {
+		return nil, errors.New("New game: player name(s) are too long")
+	}
 	sizestr := strconv.Itoa(size)
 	turnstr := strconv.Itoa(1)
 	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	conn.Do("HMSET", "game:"+g.Id, "black", g.Black, "white", g.White, "size", sizestr, "turn", turnstr)
 	conn.Do("EXPIRE", "game:"+g.Id, 86400*7)
-	return g
+	return g, nil
 }
 
 // Makes a move at a given point and saves the game

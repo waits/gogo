@@ -4,11 +4,30 @@
 
 <form method="post" action="/game/new">
   <strong>New Game</strong>
-  <input name="black" placeholder="Black" />
-  <input name="white" placeholder="White" />
-  <input name="size" type="number" placeholder="Board size" />
+  <p>
+    <label>Black player</label>
+    <input name="black" placeholder="e.g. Alice" />
+  </p>
+  <p>
+    <label>White player</label>
+    <input name="white" placeholder="e.g. Bob" />
+  </p>
+  <p>
+    <label>Board size</label>
+    <select name="size">
+      <option value="9">9x9 "quick"</option>
+      <option value="11">11x11</option>
+      <option value="13" selected>13x13 "beginner"</option>
+      <option value="15">15x15</option>
+      <option value="17">17x17</option>
+      <option value="19">19x19 "standard"</option>
+    </select>
+  </p>
   <button type="submit">Start Game</button>
 </form>
 
-<a href="/about">About</a>
+<hr>
+<footer>
+  <a href="/about">About</a>
+</footer>
 {{end}}
