@@ -1,0 +1,21 @@
+#board {
+  background-color: #dcb363;
+  border-collapse: collapse;
+}
+td {
+  border: 1px solid black;
+  padding: 0;
+}
+td:hover {
+  background-color: red;
+}
+.piece {
+  height: 30px;
+  width: 30px;
+}
+.black {
+  background-color: black;
+}
+.white {
+  background-color: white;
+}

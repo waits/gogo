@@ -1,11 +1,17 @@
 {{define "title"}}Turn {{.Turn}} – {{.Black}} vs. {{.White}}{{end}}
 {{define "content"}}
-<h1>{{.Black}} vs. {{.White}}</h1>
-<small>{{.Size}}x{{.Size}} board</small>
+<h1>Turn {{.Turn}} – {{.Black}} vs. {{.White}}</h1>
 
-<h2>Turn #{{.Turn}}: {{.Up}}</h2>
+<table id="board">
+  {{range .Board}}
+  <tr height="30px">
+    {{range .}}
+    <td width="30px">
+      {{if eq . 1}}<div class="piece black"></div>{{else if eq . 2}}<div class="piece white"></div>{{end}}
+    </td>
+    {{end}}
+  </tr>
+  {{end}}
+</table>
 
-<div>{{.Board}}</div>
-
-<a href="/">Home</a>
 {{end}}
