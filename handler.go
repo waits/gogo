@@ -47,15 +47,15 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Method == "POST" {
 		size, _ := strconv.Atoi(r.FormValue("size"))
-		if size > 19 || size < 9 {
+		if size > 19 || size < 3 {
 			return http.StatusBadRequest, errors.New("gameHandler: invalid board size")
 		}
-		game := model.NewGame(r.FormValue("black"), r.FormValue("white"), uint8(size))
+		game := model.New(r.FormValue("black"), r.FormValue("white"), size)
 		http.Redirect(w, r, "/game/"+game.Id, 303)
 		return http.StatusSeeOther, nil
 	} else {
 		id := r.URL.Path[6:]
-		game, err := model.LoadGame(id)
+		game, err := model.Load(id)
 		if err != nil {
 			return http.StatusNotFound, err
 		}
