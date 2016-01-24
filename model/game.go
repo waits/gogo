@@ -74,10 +74,14 @@ func New(black string, white string, size int) (*Game, error) {
 	return g, nil
 }
 
-// Makes a move at a given point and saves the game
-func (g *Game) Save(mx int, my int) {
-	g.Turn += 1
+// Makes a move at a given coordinate and saves the game
+func (g *Game) Move(mx int, my int) error {
+	if g.Board[my][mx] != 0 {
+		return errors.New("Illegal move: point already occupied")
+	}
+
 	g.Board[my][mx] = int8(g.Turn % 2 + 1)
+	g.Turn += 1
 
 	var grid string
 	for _, y := range g.Board {
@@ -86,9 +90,11 @@ func (g *Game) Save(mx int, my int) {
 		}
 	}
 
-	conn.Do("HINCRBY", "game:"+g.Id, "turn", 1)
 	conn.Do("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
+	conn.Do("HINCRBY", "game:"+g.Id, "turn", 1)
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
+
+	return nil
 }
 
 // Returns the name of the current player

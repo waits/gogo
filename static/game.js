@@ -14,7 +14,10 @@ var Game = function(cells) {
     }
 
     function requestCallback() {
-        document.location.reload();
+        if (this.status >= 300)
+            alert(this.response);
+        else
+            document.location.reload();
     }
 }
 
