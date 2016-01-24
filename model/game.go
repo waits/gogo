@@ -42,11 +42,11 @@ func Load(id string) (*Game, error) {
 
 	grid, err := redis.String(conn.Do("GET", "game:board:"+id))
 	g.Board = make([][]int8, size)
-	for x := range g.Board {
-		g.Board[x] = make([]int8, size)
+	for y := range g.Board {
+		g.Board[y] = make([]int8, size)
 		if len(grid) == size * size {
-			for y := range g.Board[x] {
-				g.Board[x][y] = int8(grid[x*size+y]) - 48
+			for x := range g.Board[y] {
+				g.Board[y][x] = int8(grid[y*size+x]) - 48
 			}
 		}
 	}
@@ -68,12 +68,12 @@ func New(black string, white string, size int) *Game {
 // Makes a move at a given point and saves the game
 func (g *Game) Save(mx int, my int) bool {
 	g.Turn += 1
-	g.Board[mx][my] = int8(g.Turn % 2 + 1)
+	g.Board[my][mx] = int8(g.Turn % 2 + 1)
 
 	var grid string
-	for _, x := range g.Board {
-		for _, y := range x {
-			grid += strconv.Itoa(int(y))
+	for _, y := range g.Board {
+		for _, x := range y {
+			grid += strconv.Itoa(int(x))
 		}
 	}
 

@@ -1,3 +1,7 @@
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
 #board {
   background-color: #dcb363;
   border-collapse: collapse;
@@ -10,8 +14,8 @@ td:hover {
   background-color: red;
 }
 .piece {
-  height: 30px;
-  width: 30px;
+  height: 29px;
+  width: 29px;
 }
 .black {
   background-color: black;
