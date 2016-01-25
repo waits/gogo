@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"strconv"
 	"time"
@@ -30,6 +31,43 @@ func hashGameParams(params string) string {
 	return hexid
 }
 
+// Checks the points adjacent to a given point. On an empty space it returns
+// true, on an opposing color it continues, and on a like color it recurses.
+func piecesAdjacentTo(grid [][]int8, x int, y int, alreadyFound [][2]int) [][2]int {
+	cur := grid[y][x]
+	adjacentPoints := [][2]int{{x, y + 1}, {x + 1, y}, {x, y - 1}, {x - 1, y}}
+	alreadyFound = append(alreadyFound, [2]int{x, y})
+
+	for _, p := range adjacentPoints {
+		if pointInSet(p, alreadyFound) {
+			continue
+		}
+
+		if p[0] < 0 || p[0] > len(grid)-1 || p[1] < 0 || p[1] > len(grid)-1 {
+			continue
+		}
+
+		if grid[p[1]][p[0]] == 0 {
+			continue
+		}
+
+		if grid[p[1]][p[0]] == cur {
+			alreadyFound = piecesAdjacentTo(grid, p[0], p[1], alreadyFound)
+		}
+	}
+
+	return alreadyFound
+}
+
+func pointInSet(point [2]int, set [][2]int) bool {
+	for _, p := range set {
+		if p == point {
+			return true
+		}
+	}
+	return false
+}
+
 // Loads a game for a provided id
 func Load(id string) (*Game, error) {
 	resp, err := redis.StringMap(conn.Do("HGETALL", "game:"+id))
@@ -46,7 +84,7 @@ func Load(id string) (*Game, error) {
 	g.Board = make([][]int8, size)
 	for y := range g.Board {
 		g.Board[y] = make([]int8, size)
-		if len(grid) == size * size {
+		if len(grid) == size*size {
 			for x := range g.Board[y] {
 				g.Board[y][x] = int8(grid[y*size+x]) - 48
 			}
@@ -58,7 +96,7 @@ func Load(id string) (*Game, error) {
 
 // Creates a game using a hash of the game parameters as an ID
 func New(black string, white string, size int) (*Game, error) {
-	if size > 19 || size < 9 || size % 2 == 0 {
+	if size > 19 || size < 9 || size%2 == 0 {
 		return nil, errors.New("New game: invalid board size")
 	} else if len(black) == 0 || len(white) == 0 {
 		return nil, errors.New("New game: missing player name(s)")
@@ -80,8 +118,11 @@ func (g *Game) Move(mx int, my int) error {
 		return errors.New("Illegal move: point already occupied")
 	}
 
-	g.Board[my][mx] = int8(g.Turn % 2 + 1)
+	color := int8(2 - g.Turn%2)
+	g.Board[my][mx] = color
 	g.Turn += 1
+
+	piecesAdjacentTo(g.Board, mx, my, make([][2]int, 0, 180))
 
 	var grid string
 	for _, y := range g.Board {
@@ -99,7 +140,7 @@ func (g *Game) Move(mx int, my int) error {
 
 // Returns the name of the current player
 func (g *Game) Up() string {
-	if g.Turn%2 == 0 {
+	if g.Turn%2 == 1 {
 		return g.Black
 	} else {
 		return g.White
