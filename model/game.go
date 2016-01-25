@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"strconv"
 	"time"
@@ -29,43 +28,6 @@ func hashGameParams(params string) string {
 	checksum := sha256.Sum224(uniq)
 	hexid := hex.EncodeToString(checksum[:8])
 	return hexid
-}
-
-// Checks the points adjacent to a given point. On an empty space it returns
-// true, on an opposing color it continues, and on a like color it recurses.
-func piecesAdjacentTo(grid [][]int8, x int, y int, alreadyFound [][2]int) [][2]int {
-	cur := grid[y][x]
-	adjacentPoints := [][2]int{{x, y + 1}, {x + 1, y}, {x, y - 1}, {x - 1, y}}
-	alreadyFound = append(alreadyFound, [2]int{x, y})
-
-	for _, p := range adjacentPoints {
-		if pointInSet(p, alreadyFound) {
-			continue
-		}
-
-		if p[0] < 0 || p[0] > len(grid)-1 || p[1] < 0 || p[1] > len(grid)-1 {
-			continue
-		}
-
-		if grid[p[1]][p[0]] == 0 {
-			continue
-		}
-
-		if grid[p[1]][p[0]] == cur {
-			alreadyFound = piecesAdjacentTo(grid, p[0], p[1], alreadyFound)
-		}
-	}
-
-	return alreadyFound
-}
-
-func pointInSet(point [2]int, set [][2]int) bool {
-	for _, p := range set {
-		if p == point {
-			return true
-		}
-	}
-	return false
 }
 
 // Loads a game for a provided id
@@ -122,7 +84,15 @@ func (g *Game) Move(mx int, my int) error {
 	g.Board[my][mx] = color
 	g.Turn += 1
 
-	piecesAdjacentTo(g.Board, mx, my, make([][2]int, 0, 180))
+	point := Point{mx, my}
+	adjacentOpponents := piecesAdjacentTo(point, 3-color, g.Board)
+	for _, opp := range adjacentOpponents {
+		pieces := deadPiecesAdjacentTo(opp, g.Board, make([]Point, 0, 180))
+		if pieces != nil {
+			clearPoints(pieces, g.Board)
+		}
+	}
+
 
 	var grid string
 	for _, y := range g.Board {
