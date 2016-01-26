@@ -9,15 +9,17 @@ quit() {
     exit 1
 }
 
-if ! go build; then
+if ! go build -o go_server; then
     exit 2
 fi
 
-./playgo --reload &
+./go_server --reload &
 if ! ps -p $! >&-; then
     echo "Failed to start application."
     exit 3
 fi
 
-open "http://localhost:8080"
+if getopts "o" novar; then
+    open "http://localhost:8080"
+fi
 wait %1
