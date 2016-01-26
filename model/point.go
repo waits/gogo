@@ -1,6 +1,7 @@
 package model
 
 import "errors"
+
 // import "fmt"
 
 type Point struct {
@@ -17,22 +18,22 @@ func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []P
 
 	for _, p := range adjacentPoints {
 		if pointInSet(p, alreadyFound) {
-// 			fmt.Printf("%v [already in set]\n", p)
+			// 			fmt.Printf("%v [already in set]\n", p)
 			continue
 		}
 
 		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
-// 			fmt.Printf("%v [out of bounds]\n", p)
+			// 			fmt.Printf("%v [out of bounds]\n", p)
 			continue
 		}
 
 		if grid[p.Y][p.X] == 0 {
-// 			fmt.Printf("%v [empty]\n", p)
+			// 			fmt.Printf("%v [empty]\n", p)
 			return nil
 		}
 
 		if grid[p.Y][p.X] == color {
-// 			fmt.Printf("%v [connected]\n", p)
+			// 			fmt.Printf("%v [connected]\n", p)
 			alreadyFound = deadPiecesConnectedTo(p, grid, alreadyFound)
 			if alreadyFound == nil {
 				return nil
@@ -44,25 +45,27 @@ func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []P
 }
 
 // Searches for dead groups around a point and removes them
-func checkDeadnessAround(point Point, grid [][]int8) error {
+func removeDeadPiecesAround(point Point, grid [][]int8) (int, error) {
 	oppColor := 3 - grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
+	captured := 0
 	for _, p := range adjacentPoints {
 		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
 			continue
 		} else if grid[p.Y][p.X] == oppColor {
 			pieces := deadPiecesConnectedTo(p, grid, make([]Point, 0, 180))
 			if pieces != nil {
+				captured += len(pieces)
 				clearPoints(pieces, grid)
 			} else {
 				if deadPiecesConnectedTo(point, grid, make([]Point, 0, 180)) != nil {
-					return errors.New("Illegal move: suicide")
+					return 0, errors.New("Illegal move: suicide")
 				}
 			}
 		}
 	}
 
-	return nil
+	return captured, nil
 }
 
 // Returns true if a matching point is found in the slice

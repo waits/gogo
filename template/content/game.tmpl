@@ -1,6 +1,7 @@
 {{define "title"}}Turn {{.Turn}} – {{.Black}} vs. {{.White}}{{end}}
 {{define "content"}}
 <h1>Turn {{.Turn}} – {{.Black}} vs. {{.White}}</h1>
+<small>Captured: black {{.BlackScr}}, white {{.WhiteScr}}</small>
 
 <table id="board">
   {{range .Board}}

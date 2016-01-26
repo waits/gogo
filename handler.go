@@ -20,7 +20,7 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch status {
 		case http.StatusNotFound:
-			http.NotFound(w, r)
+			http.Error(w, err.Error(), status)
 		case http.StatusBadRequest:
 			http.Error(w, err.Error(), status)
 		default:

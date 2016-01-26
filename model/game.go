@@ -16,10 +16,11 @@ type Game struct {
 	Black    string
 	White    string
 	Size     int
-	Handicap int
+	Handicap int8
 	Turn     int
-	Board    [][]int8
-	Captured [2]int16
+	BlackScr int
+	WhiteScr int
+	Board    [][]int8 `redis:"-"`
 }
 
 func hashGameParams(params string) string {
@@ -32,23 +33,21 @@ func hashGameParams(params string) string {
 
 // Loads a game for a provided id
 func Load(id string) (*Game, error) {
-	resp, err := redis.StringMap(conn.Do("HGETALL", "game:"+id))
-	if err != nil {
-		return nil, err
-	} else if len(resp) == 0 {
-		return nil, errors.New("Load game: game not found")
+	resp, _ := conn.Do("HGETALL", "game:"+id)
+	attrs := resp.([]interface{})
+	if len(attrs) == 0 {
+		return nil, errors.New("load game: game not found")
 	}
-	size, _ := strconv.Atoi(resp["size"])
-	turn, _ := strconv.Atoi(resp["turn"])
-	g := &Game{Id: id, Black: resp["black"], White: resp["white"], Size: size, Turn: turn}
+	var g *Game
+	redis.ScanStruct(attrs, g)
 
-	grid, err := redis.String(conn.Do("GET", "game:board:"+id))
-	g.Board = make([][]int8, size)
+	grid, _ := redis.String(conn.Do("GET", "game:board:"+id))
+	g.Board = make([][]int8, g.Size)
 	for y := range g.Board {
-		g.Board[y] = make([]int8, size)
-		if len(grid) == size*size {
+		g.Board[y] = make([]int8, g.Size)
+		if len(grid) == g.Size*g.Size {
 			for x := range g.Board[y] {
-				g.Board[y][x] = int8(grid[y*size+x]) - 48
+				g.Board[y][x] = int8(grid[y*g.Size+x]) - 48
 			}
 		}
 	}
@@ -65,11 +64,11 @@ func New(black string, white string, size int) (*Game, error) {
 	} else if len(black) > 35 || len(white) > 35 {
 		return nil, errors.New("New game: player name(s) are too long")
 	}
-	sizestr := strconv.Itoa(size)
 	turnstr := strconv.Itoa(1)
 	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
-	conn.Do("HMSET", "game:"+g.Id, "black", g.Black, "white", g.White, "size", sizestr, "turn", turnstr)
+	args := redis.Args{}.Add("game:" + g.Id).AddFlat(g)
+	conn.Do("HMSET", args...)
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 	return g, nil
 }
@@ -82,10 +81,9 @@ func (g *Game) Move(mx int, my int) error {
 
 	color := int8(2 - g.Turn%2)
 	g.Board[my][mx] = color
-	g.Turn += 1
 
 	point := Point{mx, my}
-	err := checkDeadnessAround(point, g.Board)
+	captured, err := removeDeadPiecesAround(point, g.Board)
 	if err != nil {
 		return err
 	}
@@ -98,17 +96,18 @@ func (g *Game) Move(mx int, my int) error {
 	}
 
 	conn.Do("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
-	conn.Do("HINCRBY", "game:"+g.Id, "turn", 1)
+	conn.Do("HINCRBY", "game:"+g.Id, "Turn", 1)
+	conn.Do("HINCRBY", "game:"+g.Id, g.Up()+"Scr", captured)
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 
 	return nil
 }
 
-// Returns the name of the current player
+// Returns the color to move next
 func (g *Game) Up() string {
 	if g.Turn%2 == 1 {
-		return g.Black
+		return "Black"
 	} else {
-		return g.White
+		return "White"
 	}
 }
