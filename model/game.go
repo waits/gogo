@@ -68,7 +68,7 @@ func New(black string, white string, size int) (*Game, error) {
 	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	args := redis.Args{}.Add("game:" + g.Id).AddFlat(g)
-	conn.Do("HMSET", args...)
+	conn.Send("HMSET", args...)
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 	return g, nil
 }
@@ -95,9 +95,9 @@ func (g *Game) Move(mx int, my int) error {
 		}
 	}
 
-	conn.Do("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
-	conn.Do("HINCRBY", "game:"+g.Id, "Turn", 1)
-	conn.Do("HINCRBY", "game:"+g.Id, g.Up()+"Scr", captured)
+	conn.Send("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
+	conn.Send("HINCRBY", "game:"+g.Id, "Turn", 1)
+	conn.Send("HINCRBY", "game:"+g.Id, g.Up()+"Scr", captured)
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 
 	return nil
