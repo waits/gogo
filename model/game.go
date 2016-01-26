@@ -33,6 +33,8 @@ func hashGameParams(params string) string {
 
 // Loads a game for a provided id
 func Load(id string) (*Game, error) {
+	conn := pool.Get()
+	defer conn.Close()
 	resp, _ := conn.Do("HGETALL", "game:"+id)
 	attrs := resp.([]interface{})
 	if len(attrs) == 0 {
@@ -68,7 +70,9 @@ func New(black string, white string, size int) (*Game, error) {
 	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	args := redis.Args{}.Add("game:" + g.Id).AddFlat(g)
+	conn := pool.Get()
 	conn.Send("HMSET", args...)
+	defer conn.Close()
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 	return g, nil
 }
@@ -95,6 +99,8 @@ func (g *Game) Move(mx int, my int) error {
 		}
 	}
 
+	conn := pool.Get()
+	defer conn.Close()
 	conn.Send("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
 	conn.Send("HINCRBY", "game:"+g.Id, "Turn", 1)
 	conn.Send("HINCRBY", "game:"+g.Id, g.Up()+"Scr", captured)
