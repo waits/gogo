@@ -85,14 +85,10 @@ func (g *Game) Move(mx int, my int) error {
 	g.Turn += 1
 
 	point := Point{mx, my}
-	adjacentOpponents := piecesAdjacentTo(point, 3-color, g.Board)
-	for _, opp := range adjacentOpponents {
-		pieces := deadPiecesAdjacentTo(opp, g.Board, make([]Point, 0, 180))
-		if pieces != nil {
-			clearPoints(pieces, g.Board)
-		}
+	err := checkDeadnessAround(point, g.Board)
+	if err != nil {
+		return err
 	}
-
 
 	var grid string
 	for _, y := range g.Board {

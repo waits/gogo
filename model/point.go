@@ -1,49 +1,68 @@
 package model
 
+import "errors"
+// import "fmt"
+
 type Point struct {
 	X int
 	Y int
 }
 
-// Checks the points adjacent to a given point. On an empty space it returns
-// true, on an opposing color it continues, and on a like color it recurses.
-func deadPiecesAdjacentTo(point Point, grid [][]int8, alreadyFound []Point) []Point {
+// Checks the points adjacent to a given point for life. Returns nil if it
+// finds an empty point, otherwise it returns all connected pieces.
+func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []Point {
 	color := grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
 	alreadyFound = append(alreadyFound, point)
 
 	for _, p := range adjacentPoints {
 		if pointInSet(p, alreadyFound) {
+// 			fmt.Printf("%v [already in set]\n", p)
 			continue
 		}
 
 		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
+// 			fmt.Printf("%v [out of bounds]\n", p)
 			continue
 		}
 
 		if grid[p.Y][p.X] == 0 {
+// 			fmt.Printf("%v [empty]\n", p)
 			return nil
 		}
 
 		if grid[p.Y][p.X] == color {
-			alreadyFound = deadPiecesAdjacentTo(p, grid, alreadyFound)
+// 			fmt.Printf("%v [connected]\n", p)
+			alreadyFound = deadPiecesConnectedTo(p, grid, alreadyFound)
+			if alreadyFound == nil {
+				return nil
+			}
 		}
 	}
 
 	return alreadyFound
 }
 
-func piecesAdjacentTo(point Point, color int8, grid [][]int8) []Point {
+// Searches for dead groups around a point and removes them
+func checkDeadnessAround(point Point, grid [][]int8) error {
+	oppColor := 3 - grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
-	result := make([]Point, 0, 4)
 	for _, p := range adjacentPoints {
 		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
 			continue
-		} else if grid[p.Y][p.X] == color {
-			result = append(result, Point{p.X, p.Y})
+		} else if grid[p.Y][p.X] == oppColor {
+			pieces := deadPiecesConnectedTo(p, grid, make([]Point, 0, 180))
+			if pieces != nil {
+				clearPoints(pieces, grid)
+			} else {
+				if deadPiecesConnectedTo(point, grid, make([]Point, 0, 180)) != nil {
+					return errors.New("Illegal move: suicide")
+				}
+			}
 		}
 	}
-	return result
+
+	return nil
 }
 
 // Returns true if a matching point is found in the slice
@@ -53,6 +72,7 @@ func pointInSet(p Point, set []Point) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
