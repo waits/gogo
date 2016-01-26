@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"playgo/model"
+	"go/model"
 	"strconv"
 	"strings"
 )
@@ -20,7 +20,7 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch status {
 		case http.StatusNotFound:
-			http.Error(w, err.Error(), status)
+			http.NotFound(w, r)
 		case http.StatusBadRequest:
 			http.Error(w, err.Error(), status)
 		default:

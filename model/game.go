@@ -38,7 +38,7 @@ func Load(id string) (*Game, error) {
 	if len(attrs) == 0 {
 		return nil, errors.New("load game: game not found")
 	}
-	var g *Game
+	g := &Game{}
 	redis.ScanStruct(attrs, g)
 
 	grid, _ := redis.String(conn.Do("GET", "game:board:"+id))
