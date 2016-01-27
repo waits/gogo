@@ -3,6 +3,7 @@ package main
 
 import (
 	"flag"
+	"golang.org/x/net/websocket"
 	"html/template"
 	"log"
 	"net/http"
@@ -31,5 +32,6 @@ func main() {
 	http.Handle("/", reqHandler{c, rootHandler})
 	http.Handle("/game/", reqHandler{c, gameHandler})
 	http.Handle("/static/", http.FileServer(http.Dir("./")))
+	http.Handle("/live/game/", websocket.Handler(liveHandler))
 	http.ListenAndServe(*httpAddr, nil)
 }

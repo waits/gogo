@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"golang.org/x/net/websocket"
+	"io"
 	"log"
 	"net/http"
 	"go/model"
@@ -71,4 +73,11 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 			return http.StatusOK, renderTemplate(c, w, "game", game)
 		}
 	}
+}
+
+// Sends game updates to a WebSocket connection
+func liveHandler(ws *websocket.Conn) {
+	r := ws.Request()
+	log.Printf("%s %s %s websocket", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path)
+	io.Copy(ws, ws)
 }
