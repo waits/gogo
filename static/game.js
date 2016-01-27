@@ -5,13 +5,24 @@ var Game = function(cells) {
         cells[i].addEventListener('click', clickHandler);
     }
     var wsurl = 'ws://' + window.location.host + '/live' + window.location.pathname
-    console.log(wsurl);
     var socket = new WebSocket(wsurl);
     socket.onmessage = function(event) {
-        console.log(event.data);
-    }
-    socket.onopen = function(event) {
-        socket.send("Websocket test data x2.");
+        var g = JSON.parse(event.data);
+        console.log('game', g);
+        document.getElementById('turn').textContent = g.Turn;
+        document.getElementById('blackscr').textContent = g.BlackScr;
+        document.getElementById('whitescr').textContent = g.WhiteScr;
+        for (var y=0; y<g.Board.length; y++) {
+            for (var x=0; x<g.Board[y].length; x++) {
+                var cell = cells[y*g.Board.length+x];
+                var color = null;
+                switch (g.Board[y][x]) {
+                    case 1: cell.classList.add('black'); break;
+                    case 2: cell.classList.add('white'); break;
+                    default: cell.classList.remove('black', 'white');
+                }
+            }
+        }
     }
 
     function clickHandler(event) {

@@ -7,6 +7,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"strconv"
 	"time"
+	"fmt"
 )
 
 const StaleGameExpiration = 60 * 60 * 24 * 2
@@ -77,6 +78,23 @@ func New(black string, white string, size int) (*Game, error) {
 	return g, nil
 }
 
+// Subscribes to game updates
+func Subscribe(id string, callback func(*Game)) {
+	conn := redis.PubSubConn{pool.Get()}
+	conn.Subscribe("game:"+id)
+	for {
+		switch reply := conn.Receive().(type) {
+		case redis.Message:
+			g, _ := Load(id)
+			callback(g)
+		case redis.Subscription:
+			fmt.Printf("%s: %s %d\n", reply.Channel, reply.Kind, reply.Count)
+		case error:
+			panic(reply)
+		}
+	}
+}
+
 // Makes a move at a given coordinate and saves the game
 func (g *Game) Move(mx int, my int) error {
 	if g.Board[my][mx] != 0 {
@@ -104,6 +122,7 @@ func (g *Game) Move(mx int, my int) error {
 	conn.Send("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
 	conn.Send("HINCRBY", "game:"+g.Id, "Turn", 1)
 	conn.Send("HINCRBY", "game:"+g.Id, g.Up()+"Scr", captured)
+	conn.Send("PUBLISH", "game:"+g.Id, "move")
 	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
 
 	return nil

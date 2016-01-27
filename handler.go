@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"golang.org/x/net/websocket"
-	"io"
+	"encoding/json"
 	"log"
 	"net/http"
 	"go/model"
@@ -79,5 +79,14 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 func liveHandler(ws *websocket.Conn) {
 	r := ws.Request()
 	log.Printf("%s %s %s websocket", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path)
-	io.Copy(ws, ws)
+
+	id := r.URL.Path[11:]
+
+	model.Subscribe(id, func(g *model.Game) {
+		log.Println(id)
+		err := json.NewEncoder(ws).Encode(g)
+		if err != nil {
+			panic(err)
+		}
+	})
 }
