@@ -4,7 +4,8 @@ var Game = function(cells) {
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
-    var wsurl = 'ws://' + window.location.host + '/live' + window.location.pathname
+    var proto = document.location.protocol == 'https:' ? 'wss://' : 'ws://'
+    var wsurl = proto + window.location.host + '/live' + window.location.pathname;
     var socket = new WebSocket(wsurl);
     socket.onmessage = function(event) {
         var g = JSON.parse(event.data);
