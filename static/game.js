@@ -37,12 +37,10 @@ var Game = function(cells) {
     function requestCallback() {
         if (this.status >= 300)
             alert(this.response);
-        else
-            document.location.reload();
     }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     var cells = document.getElementsByClassName('cell');
-    new Game(cells);
+    cells.length && new Game(cells);
 });

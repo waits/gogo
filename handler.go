@@ -86,7 +86,7 @@ func liveHandler(ws *websocket.Conn) {
 		log.Println(id)
 		err := json.NewEncoder(ws).Encode(g)
 		if err != nil {
-			panic(err)
+			log.Fatalf(err.Error())
 		}
 	})
 }
