@@ -10,7 +10,14 @@ quit() {
     exit 1
 }
 
-if getopts "p" novar; then
+while getopts "do" opt; do
+    case $opt in
+        d) deploy=true;;
+        o) open=true;;
+    esac
+done
+
+if [ $deploy ]; then
     env GOOS=linux GOARCH=amd64 go build -o go_server
 else
     if ! go build -o go_dev; then
@@ -22,7 +29,7 @@ else
         exit 3
     fi
 
-    if getopts "o" novar; then
+    if [ $open ]; then
         open "http://localhost:8080"
     fi
     wait %1
