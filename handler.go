@@ -1,12 +1,12 @@
 package main
 
 import (
-	"errors"
-	"golang.org/x/net/websocket"
 	"encoding/json"
+	"errors"
+	"go/model"
+	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
-	"go/model"
 	"strconv"
 	"strings"
 )

@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/garyburd/redigo/redis"
+	"log"
 	"strconv"
 	"time"
-	"fmt"
 )
 
 const StaleGameExpiration = 60 * 60 * 24 * 2
@@ -81,16 +81,20 @@ func New(black string, white string, size int) (*Game, error) {
 // Subscribes to game updates
 func Subscribe(id string, callback func(*Game)) {
 	conn := redis.PubSubConn{pool.Get()}
-	conn.Subscribe("game:"+id)
+	conn.Subscribe("game:" + id)
 	for {
 		switch reply := conn.Receive().(type) {
 		case redis.Message:
-			g, _ := Load(id)
-			callback(g)
+			g, err := Load(id)
+			if err != nil {
+				log.Panicln(err)
+			} else {
+				callback(g)
+			}
 		case redis.Subscription:
-			fmt.Printf("%s: %s %d\n", reply.Channel, reply.Kind, reply.Count)
+			log.Printf("%s: %s %d\n", reply.Channel, reply.Kind, reply.Count)
 		case error:
-			panic(reply)
+			log.Fatalln(reply)
 		}
 	}
 }
