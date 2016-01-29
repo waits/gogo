@@ -83,7 +83,7 @@ func liveHandler(ws *websocket.Conn) {
 	id := r.URL.Path[11:]
 
 	model.Subscribe(id, func(g *model.Game) {
-		log.Println(id)
+		log.Printf("Sending WebSocket message for game %s", g.Id)
 		err := json.NewEncoder(ws).Encode(g)
 		if err != nil {
 			log.Fatalf(err.Error())

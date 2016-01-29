@@ -92,7 +92,7 @@ func Subscribe(id string, callback func(*Game)) {
 				callback(g)
 			}
 		case redis.Subscription:
-			log.Printf("%s: %s %d\n", reply.Channel, reply.Kind, reply.Count)
+			log.Printf("Subscribing to channel %s [%d active]\n", reply.Channel, reply.Count)
 		case error:
 			log.Fatalln(reply)
 		}
