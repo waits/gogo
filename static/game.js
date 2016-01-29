@@ -1,15 +1,24 @@
 'use strict';
 
 var Game = function(cells) {
+    var failedAttempts = 0;
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
-    var proto = document.location.protocol == 'https:' ? 'wss://' : 'ws://'
-    var wsurl = proto + window.location.host + '/live' + window.location.pathname;
-    var socket = new WebSocket(wsurl);
-    socket.onmessage = function(event) {
+    connect();
+
+    function connect() {
+        var proto = document.location.protocol == 'https:' ? 'wss://' : 'ws://'
+        var wsurl = proto + window.location.host + '/live' + window.location.pathname;
+        var socket = new WebSocket(wsurl);
+        socket.onmessage = messageHandler;
+        socket.onclose = closeHandler;
+        socket.onerror = errorHandler;
+        socket.onopen = function() {failedAttempts = 0; console.info('WebSocket connected');};
+    }
+
+    function messageHandler(event) {
         var g = JSON.parse(event.data);
-        console.log('game', g);
         document.getElementById('turn').textContent = g.Turn;
         document.getElementById('blackscr').textContent = g.BlackScr;
         document.getElementById('whitescr').textContent = g.WhiteScr;
@@ -24,6 +33,17 @@ var Game = function(cells) {
                 }
             }
         }
+    }
+
+    function closeHandler(event) {
+        var wait = Math.round(Math.pow(failedAttempts++, 1.5) + 1);
+        setTimeout(connect, wait * 1000);
+        console.warn('WebSocket closed, attempt ' + failedAttempts + ', reconnecting in ' + wait + 's');
+    }
+
+    function errorHandler(event) {
+        alert('There was an error connecting to the server. Please refresh the page.');
+        console.error('WebSocket errored', event);
     }
 
     function clickHandler(event) {
