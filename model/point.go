@@ -13,31 +13,31 @@ type Point struct {
 // finds an empty point, otherwise it returns all connected pieces.
 func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []Point {
 	color := grid[point.Y][point.X]
-	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
+	adjacentPoints := []Point{{point.X, point.Y - 1}, {point.X + 1, point.Y}, {point.X, point.Y + 1}, {point.X - 1, point.Y}}
 	alreadyFound = append(alreadyFound, point)
 
+// 	fmt.Printf("Searching around %v\n", point)
 	for _, p := range adjacentPoints {
 		if pointInSet(p, alreadyFound) {
-			// 			fmt.Printf("%v [already in set]\n", p)
+// 			fmt.Printf("%v [already in set]\n", p)
+			continue
+		} else if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
+// 			fmt.Printf("%v [out of bounds]\n", p)
 			continue
 		}
 
-		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
-			// 			fmt.Printf("%v [out of bounds]\n", p)
-			continue
-		}
-
-		if grid[p.Y][p.X] == 0 {
-			// 			fmt.Printf("%v [empty]\n", p)
-			return nil
-		}
-
-		if grid[p.Y][p.X] == color {
-			// 			fmt.Printf("%v [connected]\n", p)
-			alreadyFound = deadPiecesConnectedTo(p, grid, alreadyFound)
-			if alreadyFound == nil {
+		switch grid[p.Y][p.X] {
+			case 0:
+// 				fmt.Printf("%v [empty]\n", p)
 				return nil
-			}
+			case color:
+// 				fmt.Printf("%v [ally]\n", p)
+				alreadyFound = deadPiecesConnectedTo(p, grid, alreadyFound)
+				if alreadyFound == nil {
+					return nil
+				}
+			default:
+// 				fmt.Printf("%v [opponent]\n", p)
 		}
 	}
 
@@ -57,12 +57,12 @@ func removeDeadPiecesAround(point Point, grid [][]int8) (int, error) {
 			if pieces != nil {
 				captured += len(pieces)
 				clearPoints(pieces, grid)
-			} else {
-				if deadPiecesConnectedTo(point, grid, make([]Point, 0, 180)) != nil {
-					return 0, errors.New("Illegal move: suicide")
-				}
 			}
 		}
+	}
+
+	if captured == 0 && deadPiecesConnectedTo(point, grid, make([]Point, 0, 180)) != nil {
+		return 0, errors.New("Illegal move: suicide")
 	}
 
 	return captured, nil
