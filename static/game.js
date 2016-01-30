@@ -1,7 +1,8 @@
 'use strict';
 
-var GameController = function(cells, black, white) {
+var GameController = function(board, black, white) {
     var failedAttempts = 0, timer;
+    var cells = board.getElementsByClassName('cell');
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
@@ -15,9 +16,10 @@ var GameController = function(cells, black, white) {
         socket.onclose = closeHandler;
         socket.onerror = errorHandler;
         socket.onopen = function() {
+            clearInterval(timer);
             document.title = black + ' vs. ' + white + ' - Go';
             failedAttempts = 0;
-            clearInterval(timer);
+            board.classList.remove('disabled');
             console.info('WebSocket connected');
         };
     }
@@ -50,6 +52,7 @@ var GameController = function(cells, black, white) {
         }
         var wait = Math.round(Math.pow(failedAttempts++, 1.5) + 1);
         setTimeout(connect, wait * 1000);
+        board.classList.add('disabled');
         console.warn('WebSocket closed, attempt ' + failedAttempts + ', reconnecting in ' + wait + 's');
     }
 
@@ -59,6 +62,7 @@ var GameController = function(cells, black, white) {
     }
 
     function clickHandler(event) {
+        if (board.classList.contains('disabled')) return;
         var x = indexOf(this);
         var y = indexOf(this.parentNode);
         var url = window.location.href;

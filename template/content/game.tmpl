@@ -18,8 +18,7 @@
 {{define "script"}}
 <script>
   'use strict';
-
-    var cells = document.getElementsByClassName('cell');
-    cells.length && new GameController(cells, {{.Black}}, {{.White}});
+  var board = document.getElementById('board');
+  board && new GameController(board, {{.Black}}, {{.White}});
 </script>
 {{end}}
