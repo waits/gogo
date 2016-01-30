@@ -1,4 +1,4 @@
-{{define "title"}}{{.Black}} vs. {{.White}}{{end}}
+{{define "title"}}{{.Black}} vs. {{.White}} - Go{{end}}
 {{define "content"}}
 <h1>Turn <span id="turn">{{.Turn}}</span> – {{.Black}} vs. {{.White}}</h1>
 <small>Captured: black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></small>
@@ -14,5 +14,12 @@
   </tr>
   {{end}}
 </table>
+{{end}}
+{{define "script"}}
+<script>
+  'use strict';
 
+    var cells = document.getElementsByClassName('cell');
+    cells.length && new GameController(cells, {{.Black}}, {{.White}});
+</script>
 {{end}}

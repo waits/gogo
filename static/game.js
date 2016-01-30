@@ -1,20 +1,25 @@
 'use strict';
 
-var Game = function(cells) {
-    var failedAttempts = 0;
+var GameController = function(cells, black, white) {
+    var failedAttempts = 0, timer;
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
     connect();
 
     function connect() {
-        var proto = document.location.protocol == 'https:' ? 'wss://' : 'ws://'
+        var proto = document.location.protocol == 'https:' ? 'wss://' : 'ws://';
         var wsurl = proto + window.location.host + '/live' + window.location.pathname;
         var socket = new WebSocket(wsurl);
         socket.onmessage = messageHandler;
         socket.onclose = closeHandler;
         socket.onerror = errorHandler;
-        socket.onopen = function() {failedAttempts = 0; console.info('WebSocket connected');};
+        socket.onopen = function() {
+            document.title = black + ' vs. ' + white + ' - Go';
+            failedAttempts = 0;
+            clearInterval(timer);
+            console.info('WebSocket connected');
+        };
     }
 
     function messageHandler(event) {
@@ -36,6 +41,13 @@ var Game = function(cells) {
     }
 
     function closeHandler(event) {
+        if (failedAttempts == 0) {
+            document.title = 'Reconnecting';
+            timer = setInterval(function() {
+                if (document.title.length < 15) document.title += '.';
+                else document.title = 'Reconnecting';
+            }, 1000);
+        }
         var wait = Math.round(Math.pow(failedAttempts++, 1.5) + 1);
         setTimeout(connect, wait * 1000);
         console.warn('WebSocket closed, attempt ' + failedAttempts + ', reconnecting in ' + wait + 's');
@@ -43,7 +55,7 @@ var Game = function(cells) {
 
     function errorHandler(event) {
         alert('There was an error connecting to the server. Please refresh the page.');
-        console.error('WebSocket errored', event);
+        console.error('WebSocket error', event);
     }
 
     function clickHandler(event) {
@@ -55,12 +67,6 @@ var Game = function(cells) {
     }
 
     function requestCallback() {
-        if (this.status >= 300)
-            alert(this.response);
+        if (this.status >= 300) alert(this.response);
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    var cells = document.getElementsByClassName('cell');
-    cells.length && new Game(cells);
-});
