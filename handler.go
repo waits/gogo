@@ -49,7 +49,15 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Method == "POST" {
 		size, _ := strconv.Atoi(r.FormValue("size"))
-		game, err := model.New(r.FormValue("black"), r.FormValue("white"), size)
+		var black, white string
+		if r.FormValue("color") == "black" {
+			black = r.FormValue("player_1")
+			white = r.FormValue("player_2")
+		} else {
+			black = r.FormValue("player_2")
+			white = r.FormValue("player_1")
+		}
+		game, err := model.New(black, white, size)
 		if err != nil {
 			return http.StatusBadRequest, err
 		}

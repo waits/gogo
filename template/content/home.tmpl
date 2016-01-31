@@ -2,15 +2,20 @@
 {{define "content"}}
 <h1>Play Go</h1>
 
-<form method="post" action="/game/new">
+<form method="post" action="/game">
   <strong>New Game</strong>
   <p>
-    <label>Black player</label>
-    <input name="black" placeholder="e.g. Alice" />
+    <label>Color</label>
+    <label><input type="radio" name="color" value="black" /> Black</label>
+    <label><input type="radio" name="color" value="white" /> White</label>
   </p>
   <p>
-    <label>White player</label>
-    <input name="white" placeholder="e.g. Bob" />
+    <label>You</label>
+    <input name="player_1" placeholder="e.g. Alice" />
+  </p>
+  <p>
+    <label>Opponent</label>
+    <input name="player_2" placeholder="e.g. Bob" />
   </p>
   <p>
     <label>Board size</label>
