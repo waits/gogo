@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"go/model"
+	"github.com/waits/go/model"
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
