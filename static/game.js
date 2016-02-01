@@ -44,7 +44,7 @@ var GameController = function(board, black, white) {
                 }
             }
         }
-        if ((g.Turn % 2 == 1) != (sessionStorage.getItem('color') == 'black')) {
+        if ((g.Turn % 2 == 1) == (sessionStorage.getItem('color') == 'black')) {
             var flashTimer = setInterval(function() {
                 if (document.title == title) document.title = 'Your Turn - ' + title;
                 else document.title = title;
