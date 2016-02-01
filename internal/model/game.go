@@ -11,6 +11,7 @@ import (
 )
 
 const StaleGameExpiration = 60 * 60 * 24 * 2
+var colors = map[string]int8{"black": 1, "white": 2}
 
 type Game struct {
 	Id       string
@@ -100,13 +101,16 @@ func Subscribe(id string, callback func(*Game)) {
 }
 
 // Makes a move at a given coordinate and saves the game
-func (g *Game) Move(mx int, my int) error {
+func (g *Game) Move(c string, mx int, my int) error {
+	player := colors[c]
+	if player != int8(2 - g.Turn%2) {
+		return errors.New("Illegal move: not your turn")
+	}
 	if g.Board[my][mx] != 0 {
 		return errors.New("Illegal move: point already occupied")
 	}
 
-	color := int8(2 - g.Turn%2)
-	g.Board[my][mx] = color
+	g.Board[my][mx] = player
 
 	point := Point{mx, my}
 	captured, err := removeDeadPiecesAround(point, g.Board)

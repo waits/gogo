@@ -6,6 +6,10 @@ var GameController = function(board, black, white) {
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
+    var c = sessionStorage.getItem('color');
+    if (c) document.getElementById('color_'+c).checked = true;
+    document.forms[0].color[0].addEventListener('change', setColor);
+    document.forms[0].color[1].addEventListener('change', setColor);
     connect();
 
     function connect() {
@@ -61,12 +65,23 @@ var GameController = function(board, black, white) {
         console.error('WebSocket error', event);
     }
 
+    function setColor(event) {
+        sessionStorage.setItem('color', this.value);
+    }
+
     function clickHandler(event) {
         if (board.classList.contains('disabled')) return;
+
+        var color = sessionStorage.getItem('color');
+        if (!color) {
+            alert('You have to select a color.');
+            return;
+        }
+
         var x = indexOf(this);
         var y = indexOf(this.parentNode);
         var url = window.location.href;
-        var data = 'x=' + x + '&y=' + y;
+        var data = 'color=' + color + '&x=' + x + '&y=' + y;
         ajax('PATCH', url, data, requestCallback);
     }
 

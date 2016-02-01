@@ -3,6 +3,14 @@
 <h1>Turn <span id="turn">{{.Turn}}</span> – {{.Black}} vs. {{.White}}</h1>
 <small>Captured: black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></small>
 
+<p>
+  <form>
+    <label>Player</label>
+    <label><input type="radio" id="color_black" name="color" value="black" /> {{.Black}} (black)</label>
+    <label><input type="radio" id="color_white" name="color" value="white" /> {{.White}} (white)</label>
+  </form>
+</p>
+
 <table id="board">
   {{range .Board}}
   <tr height="30px">

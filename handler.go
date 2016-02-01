@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"github.com/waits/go/model"
+	"go/internal/model"
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
@@ -49,14 +49,8 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Method == "POST" {
 		size, _ := strconv.Atoi(r.FormValue("size"))
-		var black, white string
-		if r.FormValue("color") == "black" {
-			black = r.FormValue("player_1")
-			white = r.FormValue("player_2")
-		} else {
-			black = r.FormValue("player_2")
-			white = r.FormValue("player_1")
-		}
+		black := r.FormValue("black")
+		white := r.FormValue("white")
 		game, err := model.New(black, white, size)
 		if err != nil {
 			return http.StatusBadRequest, err
@@ -70,9 +64,10 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 			return http.StatusNotFound, err
 		}
 		if r.Method == "PATCH" {
+			color := r.FormValue("color")
 			x, _ := strconv.Atoi(r.FormValue("x"))
 			y, _ := strconv.Atoi(r.FormValue("y"))
-			err = game.Move(x, y)
+			err = game.Move(color, x, y)
 			if err != nil {
 				return http.StatusBadRequest, err
 			}

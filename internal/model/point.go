@@ -2,8 +2,6 @@ package model
 
 import "errors"
 
-// import "fmt"
-
 type Point struct {
 	X int
 	Y int
@@ -16,28 +14,22 @@ func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []P
 	adjacentPoints := []Point{{point.X, point.Y - 1}, {point.X + 1, point.Y}, {point.X, point.Y + 1}, {point.X - 1, point.Y}}
 	alreadyFound = append(alreadyFound, point)
 
-// 	fmt.Printf("Searching around %v\n", point)
 	for _, p := range adjacentPoints {
 		if pointInSet(p, alreadyFound) {
-// 			fmt.Printf("%v [already in set]\n", p)
 			continue
 		} else if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
-// 			fmt.Printf("%v [out of bounds]\n", p)
 			continue
 		}
 
 		switch grid[p.Y][p.X] {
-			case 0:
-// 				fmt.Printf("%v [empty]\n", p)
+		case 0:
+			return nil
+		case color:
+			alreadyFound = deadPiecesConnectedTo(p, grid, alreadyFound)
+			if alreadyFound == nil {
 				return nil
-			case color:
-// 				fmt.Printf("%v [ally]\n", p)
-				alreadyFound = deadPiecesConnectedTo(p, grid, alreadyFound)
-				if alreadyFound == nil {
-					return nil
-				}
-			default:
-// 				fmt.Printf("%v [opponent]\n", p)
+			}
+		default:
 		}
 	}
 
