@@ -12,13 +12,13 @@ quit() {
 
 while getopts "op" opt; do
     case $opt in
-        d) production=true;;
         o) open=true;;
+        p) production=true;;
     esac
 done
 
 if [ $production ]; then
-    env GOOS=linux GOARCH=amd64 go build -o play_go
+    env GOOS=linux GOARCH=amd64 go build -o gogo
 else
     if ! go build -o gogo; then
         exit 2
