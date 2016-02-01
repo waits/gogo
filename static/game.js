@@ -1,7 +1,8 @@
 'use strict';
 
 var GameController = function(board, black, white) {
-    var failedAttempts = 0, timer;
+    var failedAttempts = 0, timer, turn;
+    var title = black + ' vs. ' + white + ' - Go';
     var cells = board.getElementsByClassName('cell');
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
@@ -18,7 +19,6 @@ var GameController = function(board, black, white) {
         var socket = new WebSocket(wsurl);
         socket.onmessage = messageHandler;
         socket.onclose = closeHandler;
-        socket.onerror = errorHandler;
         socket.onopen = function() {
             clearInterval(timer);
             document.title = black + ' vs. ' + white + ' - Go';
@@ -44,6 +44,16 @@ var GameController = function(board, black, white) {
                 }
             }
         }
+        if ((g.Turn % 2 == 1) != (sessionStorage.getItem('color') == 'black')) {
+            var flashTimer = setInterval(function() {
+                if (document.title == title) document.title = 'Your Turn - ' + title;
+                else document.title = title;
+            }, 1000);
+            window.addEventListener('focus', function() {
+                clearInterval(flashTimer);
+                document.title = title;
+            });
+        }
     }
 
     function closeHandler(event) {
@@ -58,11 +68,6 @@ var GameController = function(board, black, white) {
         setTimeout(connect, wait * 1000);
         board.classList.add('disabled');
         console.warn('WebSocket closed, attempt ' + failedAttempts + ', reconnecting in ' + wait + 's');
-    }
-
-    function errorHandler(event) {
-        alert('There was an error connecting to the server. Please refresh the page.');
-        console.error('WebSocket error', event);
     }
 
     function setColor(event) {
