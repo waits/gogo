@@ -6,24 +6,24 @@ quit() {
     trap '' INT TERM
     echo "Shutting down...\n"
     kill -TERM 0
-    rm go_dev
+    rm gogo
     exit 1
 }
 
-while getopts "do" opt; do
+while getopts "op" opt; do
     case $opt in
-        d) deploy=true;;
+        d) production=true;;
         o) open=true;;
     esac
 done
 
-if [ $deploy ]; then
-    env GOOS=linux GOARCH=amd64 go build -o go_server
+if [ $production ]; then
+    env GOOS=linux GOARCH=amd64 go build -o play_go
 else
-    if ! go build -o go_dev; then
+    if ! go build -o gogo; then
         exit 2
     fi
-    ./go_dev --reload &
+    ./gogo --reload &
     if ! ps -p $! >&-; then
         echo "Failed to start application."
         exit 3

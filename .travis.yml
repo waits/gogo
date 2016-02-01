@@ -1,5 +1,4 @@
-language: go
-go: tip
 sudo: required
 dist: trusty
-go_import_path: github.com/waits/go
+language: go
+go: 1.5.1
