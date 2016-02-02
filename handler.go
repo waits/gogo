@@ -30,7 +30,16 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}
-	log.Printf("%s %s %s %d", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path, status)
+	log.Printf("%s %s %s %d", externalAddr(r), r.Method, r.URL.Path, status)
+}
+
+func externalAddr(r *http.Request) string {
+	fwd := r.Header.Get("X-Forwarded-For")
+	if fwd != "" {
+		return fwd
+	} else {
+		return strings.Split(r.RemoteAddr, ":")[0]
+	}
 }
 
 // Renders the home and about templates
@@ -81,7 +90,7 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 // Sends game updates to a WebSocket connection
 func liveHandler(ws *websocket.Conn) {
 	r := ws.Request()
-	log.Printf("%s %s %s websocket", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path)
+	log.Printf("%s %s %s websocket", externalAddr(r), r.Method, r.URL.Path)
 
 	id := r.URL.Path[11:]
 
