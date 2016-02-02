@@ -30,16 +30,7 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		}
 	}
-	log.Printf("%s %s %s %d", externalAddr(r), r.Method, r.URL.Path, status)
-}
-
-func externalAddr(r *http.Request) string {
-	fwd := r.Header.Get("X-Forwarded-For")
-	if fwd != "" {
-		return fwd
-	} else {
-		return strings.Split(r.RemoteAddr, ":")[0]
-	}
+	log.Printf("%s %s %s %d", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path, status)
 }
 
 // Renders the home and about templates
@@ -90,15 +81,17 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 // Sends game updates to a WebSocket connection
 func liveHandler(ws *websocket.Conn) {
 	r := ws.Request()
-	log.Printf("%s %s %s websocket", externalAddr(r), r.Method, r.URL.Path)
+	log.Printf("%s %s %s websocket", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path)
 
 	id := r.URL.Path[11:]
-
-	model.Subscribe(id, func(g *model.Game) {
+	game, _ := model.Load(id)
+	sendMsg := func(g *model.Game) {
 		log.Printf("Sending WebSocket message for game %s", g.Id)
 		err := json.NewEncoder(ws).Encode(g)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
-	})
+	}
+	sendMsg(game)
+	model.Subscribe(id, sendMsg)
 }
