@@ -38,8 +38,6 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 	switch r.URL.Path {
 	case "/":
 		return http.StatusOK, renderTemplate(c, w, "home", nil)
-	case "/about":
-		return http.StatusOK, renderTemplate(c, w, "about", nil)
 	default:
 		return http.StatusNotFound, errors.New("handler: page not found")
 	}
