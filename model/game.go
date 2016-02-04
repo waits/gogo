@@ -37,7 +37,10 @@ func hashGameParams(params string) string {
 func Load(id string) (*Game, error) {
 	conn := pool.Get()
 	defer conn.Close()
-	resp, _ := conn.Do("HGETALL", "game:"+id)
+	resp, err := conn.Do("HGETALL", "game:"+id)
+	if err != nil {
+		return nil, errors.New("load game: could not connect to database")
+	}
 	attrs := resp.([]interface{})
 	if len(attrs) == 0 {
 		return nil, errors.New("load game: game not found")
@@ -72,10 +75,16 @@ func New(black string, white string, size int) (*Game, error) {
 	hexid := hashGameParams(black + white + turnstr)
 	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
 	args := redis.Args{}.Add("game:" + g.Id).AddFlat(g)
+
 	conn := pool.Get()
-	conn.Send("HMSET", args...)
 	defer conn.Close()
-	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
+
+	conn.Send("HMSET", args...)
+	_, err := conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
+	if err != nil {
+		return nil, errors.New("new game: could not connect to database")
+	}
+
 	return g, nil
 }
 
