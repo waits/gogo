@@ -19,6 +19,11 @@ done
 
 if [ $production ]; then
     env GOOS=linux GOARCH=amd64 go build -o gogo
+    sftp go <<'EOF'
+cd /srv
+put gogo gogo
+EOF
+    rm gogo
 else
     if ! go build -o gogo; then
         exit 2
