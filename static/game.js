@@ -7,8 +7,11 @@ var GameController = function(board, passBtn, black, white) {
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
-    var c = sessionStorage.getItem('color');
-    if (c) document.getElementById('color_'+c).checked = true;
+    var color = sessionStorage.getItem('color');
+    if (color) {
+        document.getElementById('color_'+color).checked = true;
+        board.classList.remove('disabled');
+    }
     document.forms[0].color[0].addEventListener('change', setColor);
     document.forms[0].color[1].addEventListener('change', setColor);
     passBtn.addEventListener('click', pass);
@@ -24,7 +27,7 @@ var GameController = function(board, passBtn, black, white) {
             clearInterval(timer);
             document.title = black + ' vs. ' + white + ' - Go';
             failedAttempts = 0;
-            board.classList.remove('disabled');
+            if (color) board.classList.remove('disabled');
             console.info('WebSocket connected');
         };
     }
@@ -37,7 +40,6 @@ var GameController = function(board, passBtn, black, white) {
         for (var y=0; y<g.Board.length; y++) {
             for (var x=0; x<g.Board[y].length; x++) {
                 var cell = cells[y*g.Board.length+x];
-                var color = null;
                 switch (g.Board[y][x]) {
                     case 1: cell.classList.add('black'); break;
                     case 2: cell.classList.add('white'); break;
@@ -45,7 +47,7 @@ var GameController = function(board, passBtn, black, white) {
                 }
             }
         }
-        if ((g.Turn % 2 == 1) == (sessionStorage.getItem('color') == 'black')) {
+        if (2 - g.Turn % 2 == color) {
             var flashTimer = setInterval(function() {
                 if (document.title == title) document.title = 'Your Turn - ' + title;
                 else document.title = title;
@@ -72,17 +74,15 @@ var GameController = function(board, passBtn, black, white) {
     }
 
     function setColor(event) {
-        sessionStorage.setItem('color', this.value);
+        color = this.value
+        sessionStorage.setItem('color', color);
+        board.classList.remove('disabled');
     }
 
     function clickHandler(event) {
         if (board.classList.contains('disabled')) return;
 
-        var color = sessionStorage.getItem('color');
-        if (!color) {
-            alert('You have to select a color.');
-            return;
-        }
+        if (!color) return;
 
         var x = indexOf(this);
         var y = indexOf(this.parentNode);
@@ -92,11 +92,7 @@ var GameController = function(board, passBtn, black, white) {
     }
 
     function pass(event) {
-        var color = sessionStorage.getItem('color');
-        if (!color) {
-            alert('You have to select a color.');
-            return;
-        }
+        if (!color) return;
 
         var data = 'color=' + color + '&pass=true';
         ajax('PATCH', window.location.href, data, response);
