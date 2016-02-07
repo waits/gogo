@@ -1,9 +1,9 @@
-# Uploads the application to the server
+# Builds the application, uploads it to the server, and restarts the daemon
 
 GOOS=linux GOARCH=amd64 go build -o gogo
 
 sftp -i id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<'EOF'
-cd /usr/local/bin
+cd /srv
 rename gogo gogo.old
 put gogo
 EOF
@@ -12,5 +12,5 @@ ssh -i id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<'EOF'
 cd /srv
 git pull origin master
 sudo service gogo restart
-rm /usr/local/bin/gogo.old
+rm /srv/gogo.old
 EOF
