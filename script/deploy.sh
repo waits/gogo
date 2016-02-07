@@ -1,5 +1,7 @@
 # Uploads the application to the server
 
+GOOS=linux GOARCH=amd64 go build -o gogo
+
 sftp -i id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<'EOF'
 cd /usr/local/bin
 rename gogo gogo.old
