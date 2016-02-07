@@ -53,27 +53,27 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		if err != nil {
 			return http.StatusBadRequest, err
 		}
-		http.Redirect(w, r, "/game/"+game.Id, 303)
+		http.Redirect(w, r, "/game/"+game.Key, 303)
 		return http.StatusSeeOther, nil
-	} else {
-		id := r.URL.Path[6:]
-		game, err := model.Load(id)
-		if err != nil {
-			return http.StatusNotFound, err
-		}
-		if r.Method == "PATCH" {
-			color := r.FormValue("color")
-			x, _ := strconv.Atoi(r.FormValue("x"))
-			y, _ := strconv.Atoi(r.FormValue("y"))
-			err = game.Move(color, x, y)
-			if err != nil {
-				return http.StatusBadRequest, err
-			}
-			return http.StatusOK, nil
-		} else {
-			return http.StatusOK, renderTemplate(c, w, "game", game)
-		}
 	}
+
+	key := r.URL.Path[6:]
+	game, err := model.Load(key)
+	if err != nil {
+		return http.StatusNotFound, err
+	}
+	if r.Method == "PATCH" {
+		color := r.FormValue("color")
+		x, _ := strconv.Atoi(r.FormValue("x"))
+		y, _ := strconv.Atoi(r.FormValue("y"))
+		err = game.Move(color, x, y)
+		if err != nil {
+			return http.StatusBadRequest, err
+		}
+		return http.StatusOK, nil
+	}
+
+	return http.StatusOK, renderTemplate(c, w, "game", game)
 }
 
 // Sends game updates to a WebSocket connection
@@ -81,15 +81,15 @@ func liveHandler(ws *websocket.Conn) {
 	r := ws.Request()
 	log.Printf("%s %s %s websocket", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path)
 
-	id := r.URL.Path[11:]
-	game, _ := model.Load(id)
+	key := r.URL.Path[11:]
+	game, _ := model.Load(key)
 	sendMsg := func(g *model.Game) {
-		log.Printf("Sending WebSocket message for game %s", g.Id)
+		log.Printf("Sending WebSocket message for game %s", g.Key)
 		err := json.NewEncoder(ws).Encode(g)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
 	}
 	sendMsg(game)
-	model.Subscribe(id, sendMsg)
+	model.Subscribe(key, sendMsg)
 }

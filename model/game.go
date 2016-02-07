@@ -10,12 +10,13 @@ import (
 	"time"
 )
 
-const StaleGameExpiration = 60 * 60 * 24 * 2
+const staleGameTTL = 60 * 60 * 24 * 2
 
 var colors = map[string]int8{"black": 1, "white": 2}
 
+// Game holds the parameters representing a game of Go
 type Game struct {
-	Id       string
+	Key      string `redis:"-"`
 	Black    string
 	White    string
 	Size     int
@@ -34,11 +35,11 @@ func hashGameParams(params string) string {
 	return hexid
 }
 
-// Loads a game for a provided id
-func Load(id string) (*Game, error) {
+// Load returns a game from the database for a provided key
+func Load(key string) (*Game, error) {
 	conn := pool.Get()
 	defer conn.Close()
-	resp, err := conn.Do("HGETALL", "game:"+id)
+	resp, err := conn.Do("HGETALL", "game:"+key)
 	if err != nil {
 		return nil, errors.New("load game: could not connect to database")
 	}
@@ -46,10 +47,10 @@ func Load(id string) (*Game, error) {
 	if len(attrs) == 0 {
 		return nil, errors.New("load game: game not found")
 	}
-	g := &Game{}
+	g := &Game{Key: key}
 	redis.ScanStruct(attrs, g)
 
-	grid, _ := redis.String(conn.Do("GET", "game:board:"+id))
+	grid, _ := redis.String(conn.Do("GET", "game:board:"+key))
 	g.Board = make([][]int8, g.Size)
 	for y := range g.Board {
 		g.Board[y] = make([]int8, g.Size)
@@ -63,7 +64,7 @@ func Load(id string) (*Game, error) {
 	return g, nil
 }
 
-// Creates a game using a hash of the game parameters as an ID
+// New creates a game using a hash of the game parameters
 func New(black string, white string, size int) (*Game, error) {
 	if size > 19 || size < 9 || size%2 == 0 {
 		return nil, errors.New("New game: invalid board size")
@@ -74,14 +75,14 @@ func New(black string, white string, size int) (*Game, error) {
 	}
 	turnstr := strconv.Itoa(1)
 	hexid := hashGameParams(black + white + turnstr)
-	g := &Game{Id: hexid, White: white, Black: black, Size: size, Turn: 1}
-	args := redis.Args{}.Add("game:" + g.Id).AddFlat(g)
+	g := &Game{Key: hexid, White: white, Black: black, Size: size, Turn: 1}
+	args := redis.Args{}.Add("game:" + g.Key).AddFlat(g)
 
 	conn := pool.Get()
 	defer conn.Close()
 
 	conn.Send("HMSET", args...)
-	_, err := conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
+	_, err := conn.Do("EXPIRE", "game:"+g.Key, staleGameTTL)
 	if err != nil {
 		return nil, errors.New("new game: could not connect to database")
 	}
@@ -89,14 +90,14 @@ func New(black string, white string, size int) (*Game, error) {
 	return g, nil
 }
 
-// Subscribes to game updates
-func Subscribe(id string, callback func(*Game)) {
+// Subscribe creates a Redis subscription for a key
+func Subscribe(key string, callback func(*Game)) {
 	conn := redis.PubSubConn{Conn: pool.Get()}
-	conn.Subscribe("game:" + id)
+	conn.Subscribe("game:" + key)
 	for {
 		switch reply := conn.Receive().(type) {
 		case redis.Message:
-			g, err := Load(id)
+			g, err := Load(key)
 			if err != nil {
 				log.Panicln(err)
 			} else {
@@ -110,7 +111,7 @@ func Subscribe(id string, callback func(*Game)) {
 	}
 }
 
-// Makes a move at a given coordinate and saves the game
+// Move makes a move at a given coordinate and saves the game
 func (g *Game) Move(c string, mx int, my int) error {
 	player := colors[c]
 	if player != int8(2-g.Turn%2) {
@@ -137,20 +138,19 @@ func (g *Game) Move(c string, mx int, my int) error {
 
 	conn := pool.Get()
 	defer conn.Close()
-	conn.Send("SET", "game:board:"+g.Id, grid, "EX", StaleGameExpiration)
-	conn.Send("HINCRBY", "game:"+g.Id, "Turn", 1)
-	conn.Send("HINCRBY", "game:"+g.Id, g.Up()+"Scr", captured)
-	conn.Send("PUBLISH", "game:"+g.Id, "move")
-	conn.Do("EXPIRE", "game:"+g.Id, StaleGameExpiration)
+	conn.Send("SET", "game:board:"+g.Key, grid, "EX", staleGameTTL)
+	conn.Send("HINCRBY", "game:"+g.Key, "Turn", 1)
+	conn.Send("HINCRBY", "game:"+g.Key, g.Up()+"Scr", captured)
+	conn.Send("PUBLISH", "game:"+g.Key, "move")
+	conn.Do("EXPIRE", "game:"+g.Key, staleGameTTL)
 
 	return nil
 }
 
-// Returns the color to move next
+// Up returns the color to move next
 func (g *Game) Up() string {
 	if g.Turn%2 == 1 {
 		return "Black"
-	} else {
-		return "White"
 	}
+	return "White"
 }

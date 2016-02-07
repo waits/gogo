@@ -2,6 +2,7 @@ package model
 
 import "errors"
 
+// Point holds x and y coordinates of a point on a game board
 type Point struct {
 	X int
 	Y int

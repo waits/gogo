@@ -16,6 +16,7 @@ var (
 	reload       = flag.Bool("reload", false, "reload templates for every request")
 )
 
+// Context holds a map of cached templates
 type Context struct {
 	Templates map[string]*template.Template
 }
