@@ -12,7 +12,7 @@ import (
 
 const staleGameTTL = 60 * 60 * 24 * 2
 
-var colors = map[string]int8{"black": 1, "white": 2}
+var colors = [2]string{"Black", "White"}
 
 // Game holds the parameters representing a game of Go
 type Game struct {
@@ -20,11 +20,11 @@ type Game struct {
 	Black    string
 	White    string
 	Size     int
-	Handicap int8
+	Handicap int
 	Turn     int
 	BlackScr int
 	WhiteScr int
-	Board    [][]int8 `redis:"-"`
+	Board    [][]int `redis:"-"`
 }
 
 func hashGameParams(params string) string {
@@ -51,12 +51,12 @@ func Load(key string) (*Game, error) {
 	redis.ScanStruct(attrs, g)
 
 	grid, _ := redis.String(conn.Do("GET", "game:board:"+key))
-	g.Board = make([][]int8, g.Size)
+	g.Board = make([][]int, g.Size)
 	for y := range g.Board {
-		g.Board[y] = make([]int8, g.Size)
+		g.Board[y] = make([]int, g.Size)
 		if len(grid) == g.Size*g.Size {
 			for x := range g.Board[y] {
-				g.Board[y][x] = int8(grid[y*g.Size+x]) - 48
+				g.Board[y][x] = int(grid[y*g.Size+x]) - 48
 			}
 		}
 	}
@@ -112,16 +112,15 @@ func Subscribe(key string, callback func(*Game)) {
 }
 
 // Move makes a move at a given coordinate and saves the game
-func (g *Game) Move(c string, mx int, my int) error {
-	player := colors[c]
-	if player != int8(2-g.Turn%2) {
+func (g *Game) Move(color int, mx int, my int) error {
+	if color != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
 	}
 	if g.Board[my][mx] != 0 {
 		return errors.New("Illegal move: point already occupied")
 	}
 
-	g.Board[my][mx] = player
+	g.Board[my][mx] = color
 
 	point := Point{mx, my}
 	captured, err := removeDeadPiecesAround(point, g.Board)
@@ -132,25 +131,39 @@ func (g *Game) Move(c string, mx int, my int) error {
 	var grid string
 	for _, y := range g.Board {
 		for _, x := range y {
-			grid += strconv.Itoa(int(x))
+			grid += strconv.Itoa(x)
 		}
 	}
 
-	conn := pool.Get()
-	defer conn.Close()
-	conn.Send("SET", "game:board:"+g.Key, grid, "EX", staleGameTTL)
-	conn.Send("HINCRBY", "game:"+g.Key, "Turn", 1)
-	conn.Send("HINCRBY", "game:"+g.Key, g.Up()+"Scr", captured)
-	conn.Send("PUBLISH", "game:"+g.Key, "move")
-	conn.Do("EXPIRE", "game:"+g.Key, staleGameTTL)
+	g.Save(captured, grid)
 
 	return nil
 }
 
-// Up returns the color to move next
-func (g *Game) Up() string {
-	if g.Turn%2 == 1 {
-		return "Black"
+// Pass increments the turn number without making a move
+func (g *Game) Pass(color int) error {
+	if color != 2-g.Turn%2 {
+		return errors.New("Illegal move: not your turn")
 	}
-	return "White"
+
+	g.Save(0, "")
+
+	return nil
+}
+
+// Save persists the game to the database
+func (g *Game) Save(cap int, grid string) {
+	conn := pool.Get()
+	defer conn.Close()
+
+	if grid != "" {
+		conn.Send("SET", "game:board:"+g.Key, grid)
+	}
+	if cap > 0 {
+		conn.Send("HINCRBY", "game:"+g.Key, colors[2-g.Turn%2]+"Scr", cap)
+	}
+	conn.Send("HINCRBY", "game:"+g.Key, "Turn", 1)
+	conn.Send("EXPIRE", "game:"+g.Key, staleGameTTL)
+	conn.Send("EXPIRE", "game:board:"+g.Key, staleGameTTL)
+	conn.Do("PUBLISH", "game:"+g.Key, "move")
 }

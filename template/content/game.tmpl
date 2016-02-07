@@ -1,15 +1,15 @@
 {{define "title"}}{{.Black}} vs. {{.White}} - Go{{end}}
 {{define "content"}}
 <h1>Turn <span id="turn">{{.Turn}}</span> – {{.Black}} vs. {{.White}}</h1>
-<small>Captured: black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></small>
-
 <p>
   <form>
-    <label>Player</label>
-    <label><input type="radio" id="color_black" name="color" value="black" /> {{.Black}} (black)</label>
-    <label><input type="radio" id="color_white" name="color" value="white" /> {{.White}} (white)</label>
+    <strong>Player</strong>
+    <label><input type="radio" id="color_1" name="color" value="1" /> {{.Black}} (black)</label>
+    <label><input type="radio" id="color_2" name="color" value="2" /> {{.White}} (white)</label>
   </form>
 </p>
+<p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
+<p><button id="pass">Pass</button></p>
 
 <table id="board">
   {{range .Board}}
@@ -27,6 +27,7 @@
 <script>
   'use strict';
   var board = document.getElementById('board');
-  board && new GameController(board, {{.Black}}, {{.White}});
+  var passBtn = document.getElementById('pass');
+  board && new GameController(board, passBtn, {{.Black}}, {{.White}});
 </script>
 {{end}}

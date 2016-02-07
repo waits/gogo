@@ -1,6 +1,6 @@
 'use strict';
 
-var GameController = function(board, black, white) {
+var GameController = function(board, passBtn, black, white) {
     var failedAttempts = 0, timer, turn;
     var title = black + ' vs. ' + white + ' - Go';
     var cells = board.getElementsByClassName('cell');
@@ -11,6 +11,7 @@ var GameController = function(board, black, white) {
     if (c) document.getElementById('color_'+c).checked = true;
     document.forms[0].color[0].addEventListener('change', setColor);
     document.forms[0].color[1].addEventListener('change', setColor);
+    passBtn.addEventListener('click', pass);
     connect();
 
     function connect() {
@@ -87,10 +88,21 @@ var GameController = function(board, black, white) {
         var y = indexOf(this.parentNode);
         var url = window.location.href;
         var data = 'color=' + color + '&x=' + x + '&y=' + y;
-        ajax('PATCH', url, data, requestCallback);
+        ajax('PATCH', url, data, response);
     }
 
-    function requestCallback() {
+    function pass(event) {
+        var color = sessionStorage.getItem('color');
+        if (!color) {
+            alert('You have to select a color.');
+            return;
+        }
+
+        var data = 'color=' + color + '&pass=true';
+        ajax('PATCH', window.location.href, data, response);
+    }
+
+    function response() {
         if (this.status >= 300) alert(this.response);
     }
 }

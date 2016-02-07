@@ -63,10 +63,14 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		return http.StatusNotFound, err
 	}
 	if r.Method == "PATCH" {
-		color := r.FormValue("color")
-		x, _ := strconv.Atoi(r.FormValue("x"))
-		y, _ := strconv.Atoi(r.FormValue("y"))
-		err = game.Move(color, x, y)
+		color, _ := strconv.Atoi(r.FormValue("color"))
+		if pass := r.FormValue("pass"); pass != "" {
+			err = game.Pass(color)
+		} else {
+			x, _ := strconv.Atoi(r.FormValue("x"))
+			y, _ := strconv.Atoi(r.FormValue("y"))
+			err = game.Move(color, x, y)
+		}
 		if err != nil {
 			return http.StatusBadRequest, err
 		}

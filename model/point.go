@@ -10,7 +10,7 @@ type Point struct {
 
 // Checks the points adjacent to a given point for life. Returns nil if it
 // finds an empty point, otherwise it returns all connected pieces.
-func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []Point {
+func deadPiecesConnectedTo(point Point, grid [][]int, alreadyFound []Point) []Point {
 	color := grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y - 1}, {point.X + 1, point.Y}, {point.X, point.Y + 1}, {point.X - 1, point.Y}}
 	alreadyFound = append(alreadyFound, point)
@@ -38,7 +38,7 @@ func deadPiecesConnectedTo(point Point, grid [][]int8, alreadyFound []Point) []P
 }
 
 // Searches for dead groups around a point and removes them
-func removeDeadPiecesAround(point Point, grid [][]int8) (int, error) {
+func removeDeadPiecesAround(point Point, grid [][]int) (int, error) {
 	oppColor := 3 - grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
 	captured := 0
@@ -73,7 +73,7 @@ func pointInSet(p Point, set []Point) bool {
 }
 
 // Resets each point in the slice to 0
-func clearPoints(points []Point, grid [][]int8) {
+func clearPoints(points []Point, grid [][]int) {
 	for _, p := range points {
 		grid[p.Y][p.X] = 0
 	}
