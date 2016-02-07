@@ -11,6 +11,7 @@ import (
 )
 
 const StaleGameExpiration = 60 * 60 * 24 * 2
+
 var colors = map[string]int8{"black": 1, "white": 2}
 
 type Game struct {
@@ -90,7 +91,7 @@ func New(black string, white string, size int) (*Game, error) {
 
 // Subscribes to game updates
 func Subscribe(id string, callback func(*Game)) {
-	conn := redis.PubSubConn{pool.Get()}
+	conn := redis.PubSubConn{Conn: pool.Get()}
 	conn.Subscribe("game:" + id)
 	for {
 		switch reply := conn.Receive().(type) {
@@ -112,7 +113,7 @@ func Subscribe(id string, callback func(*Game)) {
 // Makes a move at a given coordinate and saves the game
 func (g *Game) Move(c string, mx int, my int) error {
 	player := colors[c]
-	if player != int8(2 - g.Turn%2) {
+	if player != int8(2-g.Turn%2) {
 		return errors.New("Illegal move: not your turn")
 	}
 	if g.Board[my][mx] != 0 {
