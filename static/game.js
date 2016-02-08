@@ -34,6 +34,8 @@ var GameController = function(board, passBtn, black, white) {
 
     function messageHandler(event) {
         var g = JSON.parse(event.data);
+        if (g.Last === 'f') document.location.reload();
+
         document.getElementById('turn').textContent = g.Turn;
         document.getElementById('blackscr').textContent = g.BlackScr;
         document.getElementById('whitescr').textContent = g.WhiteScr;
@@ -81,7 +83,6 @@ var GameController = function(board, passBtn, black, white) {
 
     function clickHandler(event) {
         if (board.classList.contains('disabled')) return;
-
         if (!color) return;
 
         var x = indexOf(this);
@@ -92,6 +93,7 @@ var GameController = function(board, passBtn, black, white) {
     }
 
     function pass(event) {
+        if (board.classList.contains('disabled')) return;
         if (!color) return;
 
         var data = 'color=' + color + '&pass=true';

@@ -1,17 +1,21 @@
-{{define "title"}}{{.Black}} vs. {{.White}} - Go{{end}}
+{{define "title"}}{{if eq .Last "f"}}Game Over - {{end}}{{.Black}} vs. {{.White}} - Go{{end}}
 {{define "content"}}
-<h1>Turn <span id="turn">{{.Turn}}</span> – {{.Black}} vs. {{.White}}</h1>
-<p>
-  <form>
-    <strong>Player</strong>
-    <label><input type="radio" id="color_1" name="color" value="1" /> {{.Black}} (black)</label>
-    <label><input type="radio" id="color_2" name="color" value="2" /> {{.White}} (white)</label>
-  </form>
-</p>
-<p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
-<p><button id="pass">Pass</button></p>
+<h1>Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
 
-<table id="board" class="disabled">
+{{if ne .Last "f"}}
+  <p>
+    <form>
+      <strong>Player</strong>
+      <label><input type="radio" id="color_1" name="color" value="1" /> {{.Black}} (black)</label>
+      <label><input type="radio" id="color_2" name="color" value="2" /> {{.White}} (white)</label>
+    </form>
+  </p>
+{{end}}
+
+<p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
+{{if ne .Last "f"}}<p><button id="pass">Pass</button></p>{{end}}
+
+<table id="board" class="{{if eq .Last "f"}}final{{else}}disabled{{end}}">
   {{range .Board}}
   <tr height="30px">
     {{range .}}
@@ -24,10 +28,12 @@
 </table>
 {{end}}
 {{define "script"}}
-<script>
-  'use strict';
-  var board = document.getElementById('board');
-  var passBtn = document.getElementById('pass');
-  board && new GameController(board, passBtn, {{.Black}}, {{.White}});
-</script>
+{{if ne .Last "f"}}
+  <script>
+    'use strict';
+    var board = document.getElementById('board');
+    var passBtn = document.getElementById('pass');
+    board && new GameController(board, passBtn, {{.Black}}, {{.White}});
+  </script>
+{{end}}
 {{end}}

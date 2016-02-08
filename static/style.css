@@ -13,7 +13,7 @@ td {
   border: 1px solid black;
   padding: 0;
 }
-#board:not(.disabled) td:hover {
+#board:not(.disabled):not(.final) td:hover {
   background-color: red;
 }
 .piece {

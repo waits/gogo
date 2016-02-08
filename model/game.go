@@ -25,15 +25,8 @@ type Game struct {
 	BlackScr int
 	WhiteScr int
 	Ko       int
+	Last     string
 	Board    [][]int `redis:"-"`
-}
-
-func hashGameParams(params string) string {
-	time := time.Now().Unix()
-	uniq := []byte(strconv.FormatInt(time, 10) + params)
-	checksum := sha256.Sum224(uniq)
-	hexid := hex.EncodeToString(checksum[:8])
-	return hexid
 }
 
 // Load returns a game from the database for a provided key
@@ -114,7 +107,9 @@ func Subscribe(key string, callback func(*Game)) {
 
 // Move makes a move at a given coordinate and saves the game
 func (g *Game) Move(color int, mx int, my int) error {
-	if color != 2-g.Turn%2 {
+	if g.Last == "f" {
+		return errors.New("Illegal move: game over")
+	} else if color != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
 	} else if g.Board[my][mx] != 0 {
 		return errors.New("Illegal move: point already occupied")
@@ -142,6 +137,7 @@ func (g *Game) Move(color int, mx int, my int) error {
 		}
 	}
 
+	g.Last = strconv.Itoa(mx*19 + my)
 	g.Save(len(captured), grid)
 
 	return nil
@@ -149,10 +145,18 @@ func (g *Game) Move(color int, mx int, my int) error {
 
 // Pass increments the turn number without making a move
 func (g *Game) Pass(color int) error {
-	if color != 2-g.Turn%2 {
+	if g.Last == "f" {
+		return errors.New("Illegal move: game over")
+	} else if color != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
 	}
 
+	g.Ko = -2
+	if g.Last == "p" {
+		g.Last = "f"
+	} else {
+		g.Last = "p"
+	}
 	g.Save(0, "")
 
 	return nil
@@ -172,7 +176,17 @@ func (g *Game) Save(cap int, grid string) {
 	}
 	conn.Send("HINCRBY", key, "Turn", 1)
 	conn.Send("HSET", key, "Ko", g.Ko)
+	conn.Send("HSET", key, "Last", g.Last)
 	conn.Send("EXPIRE", key, staleGameTTL)
 	conn.Send("EXPIRE", "game:board:"+g.Key, staleGameTTL)
 	conn.Do("PUBLISH", key, "move")
+}
+
+// Returns the SHA-224 checksum of the game parameters truncated to 64 bits
+func hashGameParams(params string) string {
+	time := time.Now().Unix()
+	uniq := []byte(strconv.FormatInt(time, 10) + params)
+	checksum := sha256.Sum224(uniq)
+	hexid := hex.EncodeToString(checksum[:8])
+	return hexid
 }
