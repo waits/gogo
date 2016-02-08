@@ -69,7 +69,7 @@ func New(black string, white string, size int) (*Game, error) {
 	}
 	turnstr := strconv.Itoa(1)
 	hexid := hashGameParams(black + white + turnstr)
-	g := &Game{Key: hexid, White: white, Black: black, Size: size, Turn: 1}
+	g := &Game{Key: hexid, White: white, Black: black, Size: size, Turn: 1, Ko: -1}
 	args := redis.Args{}.Add("game:" + g.Key).AddFlat(g)
 
 	conn := pool.Get()
