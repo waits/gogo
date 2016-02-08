@@ -38,27 +38,27 @@ func deadPiecesConnectedTo(point Point, grid [][]int, alreadyFound []Point) []Po
 }
 
 // Searches for dead groups around a point and removes them
-func removeDeadPiecesAround(point Point, grid [][]int) (int, error) {
+func removeDeadPiecesAround(point Point, grid [][]int) ([]Point, error) {
 	oppColor := 3 - grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
-	captured := 0
+	capturedPieces := make([]Point, 0, 180)
 	for _, p := range adjacentPoints {
 		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
 			continue
 		} else if grid[p.Y][p.X] == oppColor {
 			pieces := deadPiecesConnectedTo(p, grid, make([]Point, 0, 180))
 			if pieces != nil {
-				captured += len(pieces)
+				capturedPieces = append(capturedPieces, pieces...)
 				clearPoints(pieces, grid)
 			}
 		}
 	}
 
-	if captured == 0 && deadPiecesConnectedTo(point, grid, make([]Point, 0, 180)) != nil {
-		return 0, errors.New("Illegal move: suicide")
+	if len(capturedPieces) == 0 && deadPiecesConnectedTo(point, grid, make([]Point, 0, 180)) != nil {
+		return capturedPieces, errors.New("Illegal move: suicide")
 	}
 
-	return captured, nil
+	return capturedPieces, nil
 }
 
 // Returns true if a matching point is found in the slice
