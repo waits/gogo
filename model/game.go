@@ -48,9 +48,10 @@ func Load(key string) (*Game, error) {
 	g.Board = make([][]int, g.Size)
 	for y := range g.Board {
 		g.Board[y] = make([]int, g.Size)
-		if len(grid) == g.Size*g.Size {
+		if len(grid) > 0 {
 			for x := range g.Board[y] {
-				g.Board[y][x] = int(grid[y*g.Size+x]) - 48
+				bit := (y*g.Size + x) * 2
+				g.Board[y][x] = int((grid[bit/8] >> uint(bit%8)) & 3)
 			}
 		}
 	}
@@ -130,15 +131,18 @@ func (g *Game) Move(color int, mx int, my int) error {
 		g.Ko = -1
 	}
 
-	var grid string
-	for _, y := range g.Board {
-		for _, x := range y {
-			grid += strconv.Itoa(x)
+	bytesize := g.Size*g.Size/4 + 1
+	grid := make([]byte, bytesize, bytesize)
+	for row, y := range g.Board {
+		for col, x := range y {
+			bit := (row*g.Size + col) * 2
+			grid[bit/8] |= byte(x) << uint(bit%8)
 		}
 	}
+	bstr := string(grid[:bytesize])
 
 	g.Last = strconv.Itoa(mx*19 + my)
-	g.Save(len(captured), grid)
+	g.Save(len(captured), bstr)
 
 	return nil
 }
