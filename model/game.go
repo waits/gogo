@@ -114,7 +114,6 @@ func Subscribe(key string, callback func(*Game)) {
 
 // Move makes a move at a given coordinate and saves the game
 func (g *Game) Move(color int, mx int, my int) error {
-	log.Printf("Ko: %d, Move: %d", g.Ko, mx*19+my)
 	if color != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
 	} else if g.Board[my][mx] != 0 {
@@ -126,7 +125,7 @@ func (g *Game) Move(color int, mx int, my int) error {
 	g.Board[my][mx] = color
 
 	point := Point{mx, my}
-	captured, err := removeDeadPiecesAround(point, g.Board)
+	captured, err := point.CheckLife(g.Board)
 	if err != nil {
 		return err
 	}
