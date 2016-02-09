@@ -18,9 +18,10 @@ func loadTemplates() map[string]*template.Template {
 	if err != nil {
 		panic(err)
 	}
+	// 	funcMap := template.FuncMap{"incr": incr}
 	for _, page := range pages {
 		files := append(layouts, page)
-		templates[filepath.Base(page)] = template.Must(template.ParseFiles(files...))
+		templates[filepath.Base(page)] = template.Must(template.New(page).ParseFiles(files...))
 	}
 	return templates
 }
@@ -41,3 +42,10 @@ func renderTemplate(c *Context, w http.ResponseWriter, name string, data interfa
 	}
 	return nil
 }
+
+// Returns n + 1, for use in templates
+/*
+func incr(n int) int {
+	return n + 1
+}
+*/

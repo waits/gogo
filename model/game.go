@@ -33,6 +33,10 @@ type Game struct {
 func Load(key string) (*Game, error) {
 	conn := pool.Get()
 	defer conn.Close()
+	if len(key) < 16 {
+		key, _ = redis.String(conn.Do("LINDEX", "games", key))
+	}
+	log.Printf("Key: %s", key)
 	resp, err := conn.Do("HGETALL", "game:"+key)
 	if err != nil {
 		return nil, errors.New("load game: could not connect to database")
@@ -69,20 +73,41 @@ func New(black string, white string, size int) (*Game, error) {
 		return nil, errors.New("New game: player name(s) are too long")
 	}
 	turnstr := strconv.Itoa(1)
-	hexid := hashGameParams(black + white + turnstr)
-	g := &Game{Key: hexid, White: white, Black: black, Size: size, Turn: 1, Ko: -1}
-	args := redis.Args{}.Add("game:" + g.Key).AddFlat(g)
+	key := hashGameParams(black + white + turnstr)
+	g := &Game{Key: key, White: white, Black: black, Size: size, Turn: 1, Ko: -1}
+	args := redis.Args{}.Add("game:" + key).AddFlat(g)
 
 	conn := pool.Get()
 	defer conn.Close()
 
 	conn.Send("HMSET", args...)
-	_, err := conn.Do("EXPIRE", "game:"+g.Key, staleGameTTL)
+	conn.Send("RPUSH", "games", key)
+	_, err := conn.Do("EXPIRE", "game:"+key, staleGameTTL)
 	if err != nil {
 		return nil, errors.New("new game: could not connect to database")
 	}
 
 	return g, nil
+}
+
+// Recent returns a slice of recently created games
+func Recent(n int) []*Game {
+	conn := pool.Get()
+	defer conn.Close()
+	keys, err := redis.Strings(conn.Do("LRANGE", "games", -n, -1))
+	if err != nil {
+		panic(err)
+	}
+
+	games := make([]*Game, len(keys))
+	// 	rkey := len(keys) - 1
+	for i, k := range keys {
+		if g, err := Load(k); err == nil {
+			games[i] = g
+		}
+	}
+
+	return games
 }
 
 // Subscribe creates a Redis subscription for a key

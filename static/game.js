@@ -1,25 +1,27 @@
 'use strict';
 
 var GameController = function(board, passBtn, black, white) {
-    var failedAttempts = 0, timer, turn;
     var title = black + ' vs. ' + white + ' - Go';
     var cells = board.getElementsByClassName('cell');
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
-    var color = sessionStorage.getItem('color');
-    if (color) {
-        document.getElementById('color_'+color).checked = true;
-        board.classList.remove('disabled');
+    if (passBtn && black && white) {
+        var failedAttempts = 0, timer, turn;
+        var color = sessionStorage.getItem('color');
+        if (color) {
+            document.getElementById('color_'+color).checked = true;
+            board.classList.remove('disabled');
+        }
+        document.forms[0].color[0].addEventListener('change', setColor);
+        document.forms[0].color[1].addEventListener('change', setColor);
+        passBtn.addEventListener('click', pass);
     }
-    document.forms[0].color[0].addEventListener('change', setColor);
-    document.forms[0].color[1].addEventListener('change', setColor);
-    passBtn.addEventListener('click', pass);
     connect();
 
     function connect() {
         var proto = document.location.protocol == 'https:' ? 'wss://' : 'ws://';
-        var wsurl = proto + window.location.host + '/live' + window.location.pathname;
+        var wsurl = proto + window.location.host + '/live' + window.location.pathname.replace('watch', 'game');
         var socket = new WebSocket(wsurl);
         socket.onmessage = messageHandler;
         socket.onclose = closeHandler;

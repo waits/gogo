@@ -1,6 +1,15 @@
 {{define "title"}}Play Go{{end}}
 {{define "content"}}
-<h1>Play Go</h1>
+  <h1>Play Go</h1>
 
-<a href="/new">New game</a>
+  <a href="/new">New game</a>
+
+  <h4>Recently started games</h4>
+  <ul>
+    {{range $index, $game := .}}
+      <li><a href="/watch/{{$index}}">{{.Black}} vs. {{.White}} - {{.Size}}x{{.Size}} - Turn {{.Turn}}</a></li>
+    {{else}}
+      <em>No games are in progress.</em>
+    {{end}}
+  </ul>
 {{end}}

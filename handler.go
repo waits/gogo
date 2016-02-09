@@ -37,7 +37,8 @@ func (h reqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.URL.Path {
 	case "/":
-		return http.StatusOK, renderTemplate(c, w, "home", nil)
+		games := model.Recent(20)
+		return http.StatusOK, renderTemplate(c, w, "home", games)
 	case "/new":
 		return http.StatusOK, renderTemplate(c, w, "new", nil)
 	default:
@@ -82,6 +83,15 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 	return http.StatusOK, renderTemplate(c, w, "game", game)
 }
 
+func watchHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
+	key := r.URL.Path[7:]
+	game, err := model.Load(key)
+	if err != nil {
+		return http.StatusNotFound, err
+	}
+	return http.StatusOK, renderTemplate(c, w, "watch", game)
+}
+
 // Sends game updates to a WebSocket connection
 func liveHandler(ws *websocket.Conn) {
 	r := ws.Request()
@@ -97,5 +107,5 @@ func liveHandler(ws *websocket.Conn) {
 		}
 	}
 	sendMsg(game)
-	model.Subscribe(key, sendMsg)
+	model.Subscribe(game.Key, sendMsg)
 }

@@ -32,6 +32,7 @@ func main() {
 	log.Printf("Starting server at http://%s\n", *httpAddr)
 	http.Handle("/", reqHandler{c, rootHandler})
 	http.Handle("/game/", reqHandler{c, gameHandler})
+	http.Handle("/watch/", reqHandler{c, watchHandler})
 	http.Handle("/static/", http.FileServer(http.Dir("./")))
 	http.Handle("/live/game/", websocket.Handler(liveHandler))
 	http.ListenAndServe(*httpAddr, nil)
