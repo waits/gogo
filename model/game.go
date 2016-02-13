@@ -36,7 +36,6 @@ func Load(key string) (*Game, error) {
 	if len(key) < 16 {
 		key, _ = redis.String(conn.Do("LINDEX", "games", key))
 	}
-	log.Printf("Key: %s", key)
 	resp, err := conn.Do("HGETALL", "game:"+key)
 	if err != nil {
 		return nil, errors.New("load game: could not connect to database")
