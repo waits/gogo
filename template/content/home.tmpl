@@ -7,7 +7,7 @@
   <h4>Recently started games</h4>
   <ul>
     {{range $index, $game := .}}
-      <li><a href="/watch/{{$index}}">{{.Black}} vs. {{.White}} - {{.Size}}x{{.Size}} - Turn {{.Turn}}</a></li>
+      <li><a href="/game/{{$index}}">{{.Black}} vs. {{.White}} - {{.Size}}x{{.Size}} - Turn {{.Turn}}</a></li>
     {{else}}
       <em>No games are in progress.</em>
     {{end}}

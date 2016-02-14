@@ -19,9 +19,11 @@
 {{end}}
 
 {{define "script"}}
+{{if ne .Last "f"}}
   <script>
     'use strict';
     var board = document.getElementById('board');
     board && new GameController(board, null, {{.Black}}, {{.White}});
   </script>
+{{end}}
 {{end}}

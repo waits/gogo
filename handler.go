@@ -80,16 +80,10 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		return http.StatusOK, nil
 	}
 
-	return http.StatusOK, renderTemplate(c, w, "game", game)
-}
-
-func watchHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
-	key := r.URL.Path[7:]
-	game, err := model.Load(key)
-	if err != nil {
-		return http.StatusNotFound, err
+	if len(key) < 16 {
+		return http.StatusOK, renderTemplate(c, w, "watch", game)
 	}
-	return http.StatusOK, renderTemplate(c, w, "watch", game)
+	return http.StatusOK, renderTemplate(c, w, "game", game)
 }
 
 // Sends game updates to a WebSocket connection
