@@ -7,6 +7,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,8 +34,8 @@ type Game struct {
 func Load(key string) (*Game, error) {
 	conn := pool.Get()
 	defer conn.Close()
-	if len(key) < 16 {
-		key, _ = redis.String(conn.Do("LINDEX", "games", key))
+	if strings.Contains(key, "-vs-") {
+		key, _ = redis.String(conn.Do("HGET", "games", key))
 	}
 	resp, err := conn.Do("HGETALL", "game:"+key)
 	if err != nil {
@@ -73,14 +74,14 @@ func New(black string, white string, size int) (*Game, error) {
 	}
 	turnstr := strconv.Itoa(1)
 	key := hashGameParams(black + white + turnstr)
-	g := &Game{Key: key, White: white, Black: black, Size: size, Turn: 1, Ko: -1}
+	g := &Game{Key: key, Black: black, White: white, Size: size, Turn: 1, Ko: -1}
 	args := redis.Args{}.Add("game:" + key).AddFlat(g)
 
 	conn := pool.Get()
 	defer conn.Close()
 
 	conn.Send("HMSET", args...)
-	conn.Send("RPUSH", "games", key)
+	conn.Send("HMSET", "games", g.Path(), g.Key)
 	_, err := conn.Do("EXPIRE", "game:"+key, staleGameTTL)
 	if err != nil {
 		return nil, errors.New("new game: could not connect to database")
@@ -93,17 +94,17 @@ func New(black string, white string, size int) (*Game, error) {
 func Recent(n int) []*Game {
 	conn := pool.Get()
 	defer conn.Close()
-	keys, err := redis.Strings(conn.Do("LRANGE", "games", -n, -1))
+	keys, err := redis.StringMap(conn.Do("HGETALL", "games"))
 	if err != nil {
 		panic(err)
 	}
 
 	games := make([]*Game, 0, len(keys))
-	for _, k := range keys {
+	for p, k := range keys {
 		if g, err := Load(k); err == nil {
 			games = append(games, g)
 		} else {
-			conn.Do("LREM", "games", 0, k)
+			conn.Do("HDEL", "games", p)
 		}
 	}
 
@@ -209,6 +210,13 @@ func (g *Game) Save(cap int, grid string) {
 	conn.Send("EXPIRE", key, staleGameTTL)
 	conn.Send("EXPIRE", "game:board:"+g.Key, staleGameTTL)
 	conn.Do("PUBLISH", key, "move")
+}
+
+// Path returns a pretty pathname for the game
+func (g *Game) Path() string {
+	b := strings.Replace(g.Black, " ", "-", -1)
+	w := strings.Replace(g.White, " ", "-", -1)
+	return strings.ToLower(b) + "-vs-" + strings.ToLower(w)
 }
 
 // Returns the SHA-224 checksum of the game parameters truncated to 64 bits

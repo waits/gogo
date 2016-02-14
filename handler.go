@@ -80,7 +80,7 @@ func gameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		return http.StatusOK, nil
 	}
 
-	if len(key) < 16 {
+	if strings.Contains(key, "-vs-") {
 		return http.StatusOK, renderTemplate(c, w, "watch", game)
 	}
 	return http.StatusOK, renderTemplate(c, w, "game", game)
