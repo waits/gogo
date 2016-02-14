@@ -98,11 +98,12 @@ func Recent(n int) []*Game {
 		panic(err)
 	}
 
-	games := make([]*Game, len(keys))
-	// 	rkey := len(keys) - 1
-	for i, k := range keys {
+	games := make([]*Game, 0, len(keys))
+	for _, k := range keys {
 		if g, err := Load(k); err == nil {
-			games[i] = g
+			games = append(games, g)
+		} else {
+			conn.Do("LREM", "games", 0, k)
 		}
 	}
 
