@@ -97,7 +97,7 @@ func liveHandler(ws *websocket.Conn) {
 		log.Printf("Sending WebSocket message for game %s", g.Key)
 		err := json.NewEncoder(ws).Encode(g)
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Println(err.Error())
 		}
 	}
 	sendMsg(game)
