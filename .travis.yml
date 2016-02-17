@@ -2,9 +2,9 @@ sudo: required
 dist: trusty
 language: go
 go:
-  - 1.5
-  - 1.5.3
-  - 1.6rc2
+- 1.5
+- 1.5.3
+- 1.6rc2
 go_import_path: gogo
 deploy:
   provider: script
@@ -13,5 +13,12 @@ deploy:
     go: 1.5.3
   skip_cleanup: true
 before_install:
-  - openssl aes-256-cbc -K $encrypted_c4bc4c5f25a7_key -iv $encrypted_c4bc4c5f25a7_iv -in script/etc/id_ecdsa.enc -out id_ecdsa -d
-  - chmod 600 id_ecdsa
+- openssl aes-256-cbc -K $encrypted_c4bc4c5f25a7_key -iv $encrypted_c4bc4c5f25a7_iv
+  -in script/etc/id_ecdsa.enc -out id_ecdsa -d
+- chmod 600 id_ecdsa
+notifications:
+  pushover:
+    api_key:
+      secure: mvyvWIa8+lLgiJoo7y0hZukdahuMho2ZTCoZGaK63NLPU8b/5VPMx4AmKlo7IA0sROpkWfXWXEHhtmMs8Hz43DCEb0g8rlcwiy4fH2sbGRPzE+xay/lKAD6xQo96kpYW3Z7JQghstS0PJ5o2RqxIy6VN43Dl9NPuWyhKo8hVhODoljXwSxZoQXoJ+kDzQ2fXStSTNJ3kRaE1D1MoujZMRJefrbP/A8oFJyKlkbp985x+ryoVlqdHNTH6U4S6jAhVwfWMoYuGXTCUjUOvkusVlo5RLegSpLZQEn3liWhOGBl9M/RW2E/RP/D5oSuBZZit/KjyhY1nQujPL1KOz0Y84lWHk99/Kp7i2SC2G6MTQsdJCU98vp/yKweBClsc1DfN0JGASXIzfKqbI8pFPwd4s1RDB3OkD1ImJ6Ig6TudNucq8fV5f5WyETS8w9pyNFdZ7cx/5upcovROSrjLiyjx5TaCDRHka9Q6vhU/1kz/eG3u1n5yOc3o6kcDXN5fDAkxSLF/Ii9ThOh6ZlZ2htp+7LNpfusCzNDjyI5uBvAYaSR61VlMG3/NEg6SFiCF4TlbFqs8hPdxNudLAUfCqMsRD28s+kWGVGhCAL4/Avc5Z5i7Yv6Ub6vbxTW2D4uIKxpGcvR9bb+b9wKMjuzXVKBboFW4l2Rh11o4+EFRYDJWXGg=
+    users:
+      secure: mOfqhg18TSZlSowvHN3MQbgQPmg5YhTwkaAFNSgBCuD+s40mLdhyhMKUYBa/6N25HGLL1/J4yqM3G/lvOeLY8Y0SifSE868UujMzs50b/MVGtS4ek4onybsc8vvYi/U3fqfFM5rlGiohmVVqv3LvlevT41pcIAvDOJrChOiT8+HhcIU334NtaGFZUw4aqxO6/EEN0AO6mqXWlSqxJugrNsLODIXW7lczUlZQ9PY6EWMeds6XStd1V+Hp9VV5OFS/NejSROG6/NnWcDVhN8AbZvOQWDQBIu1ACyT17HqdayDzUXqW3GkG5nYXB3lN9ZCNlXFMplpiQhKHkjPVvKkoH0pE5KyPDTEm1kPAF+O2M3R/6ZmBAf0LeYDjHxIzUCzkIZXiGzLqPd4Dyxv0ybiKnOItjvZRPvq8ehKwQmJirF2o3OSVckMnRzEKjv+nE9i7rWw1hgTpxweT6TxfijWJd1F3DwMPcl6QcqvdInmv3lOfNTngHyGowZYKDjV5SgpaMLAlaW8bRg363MPh55sYHGup/nR8ELnG7Gt7hahUGzm6oX1xWZJ3LCiouMIfyztTpRzSErfWPXfEJlaZD85xmrrpqSjaECdULFIi6xjy38y6s9WqMlL94I16WS/O49f1NrjUDXtuqxf4MXegBf2bNAKXQ8Ianu39un96CtTz354=
