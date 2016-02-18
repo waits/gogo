@@ -16,6 +16,8 @@ while getopts "op" opt; do
     esac
 done
 
+redis-server --daemonize yes
+
 if ! go build -o gogo; then
     exit 2
 fi
