@@ -49,6 +49,11 @@ var GameController = function(board, passBtn, black, white) {
                     case 2: cell.classList.add('white'); break;
                     default: cell.classList.remove('black', 'white');
                 }
+                if (g.Last == x * 19 + y) {
+                    cell.classList.add('last');
+                } else {
+                    cell.classList.remove('last');
+                }
             }
         }
         if (2 - g.Turn % 2 == color) {

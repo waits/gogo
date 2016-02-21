@@ -14,7 +14,7 @@ td {
   padding: 0;
 }
 #board:not(.disabled):not(.final) td:hover {
-  background-color: red;
+  background-color: gray;
 }
 .piece {
   height: 29px;
@@ -25,4 +25,7 @@ td {
 }
 .white {
   background-color: white;
+}
+.last {
+  border: 2px solid violet;
 }
