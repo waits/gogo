@@ -1,7 +1,5 @@
 # Builds the application, uploads it to the server, and restarts the daemon
 
-GOOS=linux GOARCH=amd64 go build -o gogo
-
 sftp -i id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<'EOF'
 cd /srv
 rename gogo gogo.old
