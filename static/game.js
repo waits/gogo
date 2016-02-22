@@ -1,6 +1,7 @@
 'use strict';
 
 var GameController = function(board, passBtn, black, white) {
+    var notice;
     var title = black + ' vs. ' + white + ' - Go';
     var cells = board.getElementsByClassName('cell');
     for (var i=0; i<cells.length; i++) {
@@ -56,16 +57,25 @@ var GameController = function(board, passBtn, black, white) {
                 }
             }
         }
+
         if (2 - g.Turn % 2 == color) {
-            var flashTimer = setInterval(function() {
-                if (document.title == title) document.title = 'Your Turn - ' + title;
-                else document.title = title;
-            }, 1000);
-            window.addEventListener('focus', function() {
-                clearInterval(flashTimer);
-                document.title = title;
-            });
+            notice = document.createElement('div');
+            notice.className = 'notice';
+            notice.textContent = 'Your turn!';
+            document.body.insertBefore(notice, document.getElementById('title'));
+            if (!document.hasFocus()) flashTitle();
         }
+    }
+
+    function flashTitle() {
+        var flashTimer = setInterval(function() {
+            if (document.title == title) document.title = 'Your Turn - ' + title;
+            else document.title = title;
+        }, 1000);
+        window.addEventListener('focus', function() {
+            clearInterval(flashTimer);
+            document.title = title;
+        });
     }
 
     function closeHandler(event) {
@@ -109,5 +119,6 @@ var GameController = function(board, passBtn, black, white) {
 
     function response() {
         if (this.status >= 300) alert(this.response);
+        notice.remove();
     }
 }

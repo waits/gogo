@@ -1,6 +1,6 @@
 {{define "title"}}{{if eq .Last "f"}}Game Over - {{end}}{{.Black}} vs. {{.White}} - Go{{end}}
 {{define "content"}}
-<h1>Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
+<h1 id="title">Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
 
 {{if ne .Last "f"}}
   <p>

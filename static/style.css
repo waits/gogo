@@ -29,3 +29,9 @@ td {
 .last {
   border: 2px solid violet;
 }
+
+.notice {
+  background-color: #6fc44c;
+  color: white;
+  padding: 7px 8px;
+}
