@@ -1,6 +1,6 @@
 'use strict';
 
-var GameController = function(board, passBtn, black, white) {
+var GameController = function(board, passBtn, key, black, white) {
     var notice;
     var title = black + ' vs. ' + white + ' - Go';
     var cells = board.getElementsByClassName('cell');
@@ -9,7 +9,7 @@ var GameController = function(board, passBtn, black, white) {
     }
     if (passBtn && black && white) {
         var failedAttempts = 0, timer, turn;
-        var color = sessionStorage.getItem('color');
+        var color = localStorage.getItem(key);
         if (color) {
             document.getElementById('color_'+color).checked = true;
             board.classList.remove('disabled');
@@ -92,10 +92,15 @@ var GameController = function(board, passBtn, black, white) {
         console.warn('WebSocket closed, attempt ' + failedAttempts + ', reconnecting in ' + wait + 's');
     }
 
+    // Save color selection in local storage and log error if it fails
     function setColor(event) {
-        color = this.value
-        sessionStorage.setItem('color', color);
         board.classList.remove('disabled');
+        color = this.value;
+        try {
+            localStorage.setItem(key, color);
+        } catch (e) {
+            console.error('Local storage is not available.');
+        }
     }
 
     function clickHandler(event) {
@@ -119,6 +124,6 @@ var GameController = function(board, passBtn, black, white) {
 
     function response() {
         if (this.status >= 300) alert(this.response);
-        notice.remove();
+        if (notice) notice.remove();
     }
 }
