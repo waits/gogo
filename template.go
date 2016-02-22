@@ -42,10 +42,3 @@ func renderTemplate(c *Context, w http.ResponseWriter, name string, data interfa
 	}
 	return nil
 }
-
-// Returns n + 1, for use in templates
-/*
-func incr(n int) int {
-	return n + 1
-}
-*/

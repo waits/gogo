@@ -219,6 +219,11 @@ func (g *Game) Path() string {
 	return strings.ToLower(b) + "-vs-" + strings.ToLower(w)
 }
 
+// ZeroSize returns one less than the game board size
+func (g *Game) ZeroSize() int {
+	return g.Size - 1
+}
+
 // Returns the SHA-224 checksum of the game parameters truncated to 64 bits
 func hashGameParams(params string) string {
 	time := time.Now().Unix()

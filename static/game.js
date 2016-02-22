@@ -12,7 +12,8 @@ var GameController = function(board, passBtn, key, black, white) {
         var color = localStorage.getItem(key);
         if (color) {
             document.getElementById('color_'+color).checked = true;
-            board.classList.remove('disabled');
+            board.classList.remove('inactive');
+            board.classList.add(color == 1 ? 'black' : 'white');
         }
         document.forms[0].color[0].addEventListener('change', setColor);
         document.forms[0].color[1].addEventListener('change', setColor);
@@ -45,15 +46,18 @@ var GameController = function(board, passBtn, key, black, white) {
         for (var y=0; y<g.Board.length; y++) {
             for (var x=0; x<g.Board[y].length; x++) {
                 var cell = cells[y*g.Board.length+x];
+                var piece = cell.children[1];
                 switch (g.Board[y][x]) {
-                    case 1: cell.classList.add('black'); break;
-                    case 2: cell.classList.add('white'); break;
-                    default: cell.classList.remove('black', 'white');
+                    case 1: piece.classList.add('black'); break;
+                    case 2: piece.classList.add('white'); break;
+                    default:
+                        piece.classList.remove('black', 'white');
+                        piece.classList.add('hide');
                 }
                 if (g.Last == x * 19 + y) {
-                    cell.classList.add('last');
+                    piece.classList.add('last');
                 } else {
-                    cell.classList.remove('last');
+                    piece.classList.remove('last');
                 }
             }
         }
@@ -65,6 +69,12 @@ var GameController = function(board, passBtn, key, black, white) {
             document.body.insertBefore(notice, document.getElementById('title'));
             if (!document.hasFocus()) flashTitle();
         }
+    }
+
+    function insertPiece(cell, color) {
+        var piece = document.createElement('div');
+        piece.className = 'piece ' + color;
+        cell.appendChild(piece);
     }
 
     function flashTitle() {
@@ -94,8 +104,9 @@ var GameController = function(board, passBtn, key, black, white) {
 
     // Save color selection in local storage and log error if it fails
     function setColor(event) {
-        board.classList.remove('disabled');
         color = this.value;
+        board.classList.remove('inactive', 'black', 'white');
+        board.classList.add(this.dataset.color);
         try {
             localStorage.setItem(key, color);
         } catch (e) {
@@ -104,7 +115,7 @@ var GameController = function(board, passBtn, key, black, white) {
     }
 
     function clickHandler(event) {
-        if (board.classList.contains('disabled')) return;
+        if (board.classList.contains('disabled') || board.classList.contains('inactive')) return;
         if (!color) return;
 
         var x = indexOf(this);
@@ -115,7 +126,7 @@ var GameController = function(board, passBtn, key, black, white) {
     }
 
     function pass(event) {
-        if (board.classList.contains('disabled')) return;
+        if (board.classList.contains('disabled') || board.classList.contains('inactive')) return;
         if (!color) return;
 
         var data = 'color=' + color + '&pass=true';

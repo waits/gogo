@@ -2,23 +2,52 @@
   box-sizing: border-box;
 }
 
+.hide {
+  display: none;
+}
+
 #board {
   background-color: #dcb363;
-  border-collapse: collapse;
+  content: "";
+  display: table;
+  clear: both;
 }
 #board.disabled {
   opacity: 0.3;
 }
-td {
-  border: 1px solid black;
-  padding: 0;
+.row {
+  border: none;
+  padding: none;
 }
-#board:not(.disabled):not(.final) td:hover {
+.cell {
+  height: 30px;
+  width: 30px;
+  padding: 0;
+  position: relative;
+  float: left;
+}
+.cell svg {
+  display: block;
+  position: absolute;
+}
+#board:not(.disabled):not(.inactive) td:hover {
   background-color: gray;
 }
 .piece {
-  height: 29px;
-  width: 29px;
+  border-radius: 50%;
+  display: block;
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  height: 28px;
+  width: 28px;
+  z-index: 1;
+}
+#board.black .cell:hover .piece.hide {background-color: black;}
+#board.white .cell:hover .piece.hide {background-color: white;}
+.cell:hover .piece.hide {
+  display: block;
+  opacity: 0.5;
 }
 .black {
   background-color: black;
