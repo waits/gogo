@@ -9,13 +9,13 @@
   {{$s := .ZeroSize}}
   {{range $y, $row := .Board}}
   <div class="row">
-    {{range $x, $piece := $row}}
+    {{range $x, $stone := $row}}
     <div class="cell">
       <svg width="30" height="30" viewPort="0 0 30 30" version="1.1" xmlns="http://www.w3.org/2000/svg">
         <line x1="{{if eq $x 0}}15{{else}}0{{end}}" y1="15" x2="{{if eq $x $s}}15{{else}}30{{end}}" y2="15" stroke="black" stroke-width="1" />
         <line x1="15" y1="{{if eq $y 0}}15{{else}}0{{end}}" x2="15" y2="{{if eq $y $s}}15{{else}}30{{end}}" stroke="black" stroke-width="1" />
       </svg>
-      {{if eq $piece 1}}<div class="piece black"></div>{{else if eq $piece 2}}<div class="piece white"></div>{{end}}
+      {{if eq $stone 1}}<div class="stone black"></div>{{else if eq $stone 2}}<div class="stone white"></div>{{end}}
     </div>
     {{end}}
   </div>

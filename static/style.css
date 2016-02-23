@@ -33,7 +33,7 @@
 #board:not(.disabled):not(.inactive) td:hover {
   background-color: gray;
 }
-.piece {
+.stone {
   border-radius: 50%;
   display: block;
   position: absolute;
@@ -43,9 +43,9 @@
   width: 28px;
   z-index: 1;
 }
-#board.black .cell:hover .piece.hide {background-color: black;}
-#board.white .cell:hover .piece.hide {background-color: white;}
-.cell:hover .piece.hide {
+#board.black .cell:hover .stone.hide {background-color: black;}
+#board.white .cell:hover .stone.hide {background-color: white;}
+.cell:hover .stone.hide {
   display: block;
   opacity: 0.5;
 }

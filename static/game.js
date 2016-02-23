@@ -46,18 +46,18 @@ var GameController = function(board, passBtn, key, black, white) {
         for (var y=0; y<g.Board.length; y++) {
             for (var x=0; x<g.Board[y].length; x++) {
                 var cell = cells[y*g.Board.length+x];
-                var piece = cell.children[1];
+                var stone = cell.children[1];
                 switch (g.Board[y][x]) {
-                    case 1: piece.classList.add('black'); break;
-                    case 2: piece.classList.add('white'); break;
+                    case 1: stone.classList.add('black'); break;
+                    case 2: stone.classList.add('white'); break;
                     default:
-                        piece.classList.remove('black', 'white');
-                        piece.classList.add('hide');
+                        stone.classList.remove('black', 'white');
+                        stone.classList.add('hide');
                 }
                 if (g.Last == x * 19 + y) {
-                    piece.classList.add('last');
+                    stone.classList.add('last');
                 } else {
-                    piece.classList.remove('last');
+                    stone.classList.remove('last');
                 }
             }
         }
@@ -69,12 +69,6 @@ var GameController = function(board, passBtn, key, black, white) {
             document.body.insertBefore(notice, document.getElementById('title'));
             if (!document.hasFocus()) flashTitle();
         }
-    }
-
-    function insertPiece(cell, color) {
-        var piece = document.createElement('div');
-        piece.className = 'piece ' + color;
-        cell.appendChild(piece);
     }
 
     function flashTitle() {

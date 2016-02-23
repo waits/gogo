@@ -12,29 +12,29 @@ type Point struct {
 func (point Point) CheckLife(grid [][]int) ([]Point, error) {
 	oppColor := 3 - grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y + 1}, {point.X + 1, point.Y}, {point.X, point.Y - 1}, {point.X - 1, point.Y}}
-	capturedPieces := make([]Point, 0, 180)
+	capturedStones := make([]Point, 0, 180)
 	for _, p := range adjacentPoints {
 		if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
 			continue
 		} else if grid[p.Y][p.X] == oppColor {
-			pieces := p.connectedDeadPieces(grid, make([]Point, 0, 180))
-			if pieces != nil {
-				capturedPieces = append(capturedPieces, pieces...)
-				clearPoints(pieces, grid)
+			stones := p.connectedDeadStones(grid, make([]Point, 0, 180))
+			if stones != nil {
+				capturedStones = append(capturedStones, stones...)
+				clearPoints(stones, grid)
 			}
 		}
 	}
 
-	if len(capturedPieces) == 0 && point.connectedDeadPieces(grid, make([]Point, 0, 180)) != nil {
-		return capturedPieces, errors.New("Illegal move: suicide")
+	if len(capturedStones) == 0 && point.connectedDeadStones(grid, make([]Point, 0, 180)) != nil {
+		return capturedStones, errors.New("Illegal move: suicide")
 	}
 
-	return capturedPieces, nil
+	return capturedStones, nil
 }
 
 // Checks the points adjacent to a given point for life. Returns nil if it
-// finds an empty point, otherwise it returns all connected pieces.
-func (point Point) connectedDeadPieces(grid [][]int, alreadyFound []Point) []Point {
+// finds an empty point, otherwise it returns all connected stones.
+func (point Point) connectedDeadStones(grid [][]int, alreadyFound []Point) []Point {
 	color := grid[point.Y][point.X]
 	adjacentPoints := []Point{{point.X, point.Y - 1}, {point.X + 1, point.Y}, {point.X, point.Y + 1}, {point.X - 1, point.Y}}
 	alreadyFound = append(alreadyFound, point)
@@ -50,7 +50,7 @@ func (point Point) connectedDeadPieces(grid [][]int, alreadyFound []Point) []Poi
 		case 0:
 			return nil
 		case color:
-			alreadyFound = p.connectedDeadPieces(grid, alreadyFound)
+			alreadyFound = p.connectedDeadStones(grid, alreadyFound)
 			if alreadyFound == nil {
 				return nil
 			}
