@@ -41,6 +41,8 @@ func rootHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		return http.StatusOK, renderTemplate(c, w, "home", games)
 	case "/new":
 		return http.StatusOK, renderTemplate(c, w, "new", nil)
+	case "/help":
+		return http.StatusOK, renderTemplate(c, w, "help", nil)
 	default:
 		return http.StatusNotFound, errors.New("handler: page not found")
 	}
