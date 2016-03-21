@@ -11,9 +11,9 @@ import (
 	"time"
 )
 
-const staleGameTTL = 60 * 60 * 24 * 2
-
+var staleGameTTL = 60 * 60 * 24 * 2
 var colors = [2]string{"Black", "White"}
+var hcPts = [9]Point{{15, 3}, {3, 15}, {15, 15}, {3, 3}, {9, 9}, {3, 9}, {15, 9}, {9, 3}, {9, 15}}
 
 // Game holds the parameters representing a game of Go
 type Game struct {
@@ -49,32 +49,25 @@ func Load(key string) (*Game, error) {
 	redis.ScanStruct(attrs, g)
 
 	grid, _ := redis.String(conn.Do("GET", "game:board:"+key))
-	g.Board = make([][]int, g.Size)
-	for y := range g.Board {
-		g.Board[y] = make([]int, g.Size)
-		if len(grid) > 0 {
-			for x := range g.Board[y] {
-				bit := (y*g.Size + x) * 2
-				g.Board[y][x] = int((grid[bit/8] >> uint(bit%8)) & 3)
-			}
-		}
-	}
+	g.Board = parseBoard(grid, g.Size)
 
 	return g, nil
 }
 
 // New creates a game using a hash of the game parameters
-func New(black string, white string, size int) (*Game, error) {
+func New(black string, white string, size int, hdcp int) (*Game, error) {
 	if size > 19 || size < 9 || size%2 == 0 {
 		return nil, errors.New("New game: invalid board size")
 	} else if len(black) == 0 || len(white) == 0 {
 		return nil, errors.New("New game: missing player name(s)")
 	} else if len(black) > 35 || len(white) > 35 {
 		return nil, errors.New("New game: player name(s) are too long")
+	} else if hdcp > 0 && size != 19 {
+		return nil, errors.New("New game: handicap only available on 19x19 boards")
 	}
 	turnstr := strconv.Itoa(1)
 	key := hashGameParams(black + white + turnstr)
-	g := &Game{Key: key, Black: black, White: white, Size: size, Turn: 1, Ko: -1}
+	g := &Game{Key: key, Black: black, White: white, Size: size, Turn: 1, Ko: -1, Handicap: hdcp}
 	args := redis.Args{}.Add("game:" + key).AddFlat(g)
 
 	conn := pool.Get()
@@ -85,6 +78,17 @@ func New(black string, white string, size int) (*Game, error) {
 	_, err := conn.Do("EXPIRE", "game:"+key, staleGameTTL)
 	if err != nil {
 		return nil, errors.New("new game: could not connect to database")
+	}
+
+	if hdcp > 0 {
+		g.Board = parseBoard("", g.Size)
+		for i := 0; i < hdcp; i++ {
+			p := hcPts[i]
+			g.Board[p.Y][p.X] = 1
+		}
+		bstr := gridBytes(g.Board)
+		conn.Send("SET", "game:board:"+g.Key, bstr)
+		conn.Send("HSET", "game:" + key, "Turn", 2)
 	}
 
 	return g, nil
@@ -157,16 +161,7 @@ func (g *Game) Move(color int, mx int, my int) error {
 		g.Ko = -1
 	}
 
-	bytesize := g.Size*g.Size/4 + 1
-	grid := make([]byte, bytesize, bytesize)
-	for row, y := range g.Board {
-		for col, x := range y {
-			bit := (row*g.Size + col) * 2
-			grid[bit/8] |= byte(x) << uint(bit%8)
-		}
-	}
-	bstr := string(grid[:bytesize])
-
+	bstr := gridBytes(g.Board)
 	g.Last = strconv.Itoa(mx*19 + my)
 	g.Save(len(captured), bstr)
 
@@ -222,6 +217,33 @@ func (g *Game) Path() string {
 // ZeroSize returns one less than the game board size
 func (g *Game) ZeroSize() int {
 	return g.Size - 1
+}
+
+func parseBoard(grid string, size int) [][]int {
+	board := make([][]int, size)
+	for y := range board {
+		board[y] = make([]int, size)
+		if len(grid) > 0 {
+			for x := range board[y] {
+				bit := (y*size + x) * 2
+				board[y][x] = int((grid[bit/8] >> uint(bit%8)) & 3)
+			}
+		}
+	}
+	return board
+}
+
+func gridBytes(board [][]int) string {
+	l := len(board)
+	bytesize := l*l/4 + 1
+	grid := make([]byte, bytesize, bytesize)
+	for row, y := range board {
+		for col, x := range y {
+			bit := (row*l + col) * 2
+			grid[bit/8] |= byte(x) << uint(bit%8)
+		}
+	}
+	return string(grid[:bytesize])
 }
 
 // Returns the SHA-224 checksum of the game parameters truncated to 64 bits

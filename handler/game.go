@@ -51,9 +51,10 @@ func LiveHandler(ws *websocket.Conn) {
 
 func createGame(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	size, _ := strconv.Atoi(r.FormValue("size"))
+	handi, _ := strconv.Atoi(r.FormValue("handicap"))
 	black := r.FormValue("black")
 	white := r.FormValue("white")
-	game, err := model.New(black, white, size)
+	game, err := model.New(black, white, size, handi)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
