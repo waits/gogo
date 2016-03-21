@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"errors"
@@ -7,14 +7,14 @@ import (
 	"path/filepath"
 )
 
-// Loads all templates into memory (layout and content)
-func loadTemplates() map[string]*template.Template {
+// LoadTemplates loads all templates into memory (layout and content)
+func LoadTemplates(path string) map[string]*template.Template {
 	templates := make(map[string]*template.Template)
-	pages, err := filepath.Glob(*templatePath + "content/*.tmpl")
+	pages, err := filepath.Glob(path + "content/*.tmpl")
 	if err != nil {
 		panic(err)
 	}
-	layouts, err := filepath.Glob(*templatePath + "*.tmpl")
+	layouts, err := filepath.Glob(path + "*.tmpl")
 	if err != nil {
 		panic(err)
 	}
@@ -26,11 +26,11 @@ func loadTemplates() map[string]*template.Template {
 	return templates
 }
 
-// Renders an HTML template from the cache using provided data
-func renderTemplate(c *Context, w http.ResponseWriter, name string, data interface{}) error {
+// RenderTemplate renders an HTML template from the cache using provided data
+func RenderTemplate(c *Context, w http.ResponseWriter, name string, data interface{}) error {
 	tmpls := c.Templates
 	if c.Templates == nil {
-		tmpls = loadTemplates()
+		tmpls = LoadTemplates(c.TemplatePath)
 	}
 	tmpl, ok := tmpls[name+".tmpl"]
 	if !ok {

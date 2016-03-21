@@ -3,8 +3,8 @@ package main
 
 import (
 	"flag"
+	"gogo/handler"
 	"golang.org/x/net/websocket"
-	"html/template"
 	"log"
 	"net/http"
 )
@@ -16,23 +16,18 @@ var (
 	reload       = flag.Bool("reload", false, "reload templates for every request")
 )
 
-// Context holds a map of cached templates
-type Context struct {
-	Templates map[string]*template.Template
-}
-
 func main() {
 	flag.Parse()
-	t := loadTemplates()
+	t := handler.LoadTemplates(*templatePath)
 	if *reload {
 		t = nil
 	}
-	c := &Context{t}
+	c := &handler.Context{t, *templatePath}
 
 	log.Printf("Starting server at http://%s\n", *httpAddr)
-	http.Handle("/", reqHandler{c, rootHandler})
-	http.Handle("/game/", reqHandler{c, gameHandler})
+	http.Handle("/", handler.Handler{c, handler.StaticHandler})
+	http.Handle("/game/", handler.Handler{c, handler.GameHandler})
 	http.Handle("/static/", http.FileServer(http.Dir("./")))
-	http.Handle("/live/game/", websocket.Handler(liveHandler))
+	http.Handle("/live/game/", websocket.Handler(handler.LiveHandler))
 	http.ListenAndServe(*httpAddr, nil)
 }

@@ -116,7 +116,7 @@ var GameController = function(board, passBtn, key, black, white) {
         var y = indexOf(this.parentNode);
         var url = window.location.href;
         var data = 'color=' + color + '&x=' + x + '&y=' + y;
-        ajax('PATCH', url, data, response);
+        ajax('PUT', url, data, response);
     }
 
     function pass(event) {
@@ -124,7 +124,7 @@ var GameController = function(board, passBtn, key, black, white) {
         if (!color) return;
 
         var data = 'color=' + color + '&pass=true';
-        ajax('PATCH', window.location.href, data, response);
+        ajax('PUT', window.location.href, data, response);
     }
 
     function response() {
