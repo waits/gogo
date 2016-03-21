@@ -18,6 +18,7 @@ script:
 - go test -v ./...
 - go build -v
 notifications:
+  email: false
   pushover:
     api_key:
       secure: mvyvWIa8+lLgiJoo7y0hZukdahuMho2ZTCoZGaK63NLPU8b/5VPMx4AmKlo7IA0sROpkWfXWXEHhtmMs8Hz43DCEb0g8rlcwiy4fH2sbGRPzE+xay/lKAD6xQo96kpYW3Z7JQghstS0PJ5o2RqxIy6VN43Dl9NPuWyhKo8hVhODoljXwSxZoQXoJ+kDzQ2fXStSTNJ3kRaE1D1MoujZMRJefrbP/A8oFJyKlkbp985x+ryoVlqdHNTH6U4S6jAhVwfWMoYuGXTCUjUOvkusVlo5RLegSpLZQEn3liWhOGBl9M/RW2E/RP/D5oSuBZZit/KjyhY1nQujPL1KOz0Y84lWHk99/Kp7i2SC2G6MTQsdJCU98vp/yKweBClsc1DfN0JGASXIzfKqbI8pFPwd4s1RDB3OkD1ImJ6Ig6TudNucq8fV5f5WyETS8w9pyNFdZ7cx/5upcovROSrjLiyjx5TaCDRHka9Q6vhU/1kz/eG3u1n5yOc3o6kcDXN5fDAkxSLF/Ii9ThOh6ZlZ2htp+7LNpfusCzNDjyI5uBvAYaSR61VlMG3/NEg6SFiCF4TlbFqs8hPdxNudLAUfCqMsRD28s+kWGVGhCAL4/Avc5Z5i7Yv6Ub6vbxTW2D4uIKxpGcvR9bb+b9wKMjuzXVKBboFW4l2Rh11o4+EFRYDJWXGg=
