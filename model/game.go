@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var staleGameTTL = 60 * 60 * 24 * 2
+var staleGameTTL = 60 * 60 * 24 * 7
 var colors = [2]string{"Black", "White"}
 var hcPts = [9]Point{{15, 3}, {3, 15}, {15, 15}, {3, 3}, {9, 9}, {3, 9}, {15, 9}, {9, 3}, {9, 15}}
 
