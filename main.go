@@ -3,7 +3,7 @@ package main
 
 import (
 	"flag"
-	"gogo/handler"
+	"github.com/waits/gogo/handler"
 	"golang.org/x/net/websocket"
 	"log"
 	"net/http"

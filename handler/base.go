@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	"gogo/model"
+	"github.com/waits/gogo/model"
 	"html/template"
 	"log"
 	"net/http"

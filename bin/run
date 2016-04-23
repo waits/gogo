@@ -1,18 +1,22 @@
-# Builds server and runs it in development mode
+#!/bin/bash
 
-trap 'quit' INT
+# Builds server and runs it in development mode.
+
+trap "quit" INT
 
 quit() {
-    trap '' INT TERM
+    trap "" INT TERM
     echo "Shutting down...\n"
     kill -TERM 0
     rm gogo
     exit 1
 }
 
-while getopts "op" opt; do
+while getopts "ho" opt; do
     case $opt in
+	    h) echo "usage: run [-o]"; exit;;
         o) open=true;;
+        *) exit;;
     esac
 done
 
