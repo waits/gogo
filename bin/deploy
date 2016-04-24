@@ -4,15 +4,24 @@
 
 set -e -x
 
-sftp -i id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<'EOF'
-cd /srv
-rename gogo gogo.old
-put gogo
-EOF
+ROOT=/srv/go
+HASH=$(git rev-parse --short=7 HEAD)
+DIR=$ROOT/rel/$HASH
+TMP=/tmp/gogo-$HASH.tar.gz
 
-ssh -i id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<'EOF'
-cd /srv
-git pull origin master
-sudo service gogo restart
-rm /srv/gogo.old
+pushd ..
+	tar --exclude=".*" -czf gogo.tar.gz gogo
+	scp -i gogo/.etc/id_ecdsa -o StrictHostKeyChecking=no gogo.tar.gz dylan@go.waits.io:$TMP
+	rm gogo.tar.gz
+popd
+
+ssh -i .etc/id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<-EOF
+	set -x
+	mkdir -p $DIR
+	tar -xzf $TMP -C $DIR --strip-components=1
+
+	ln -nsf $DIR $ROOT/cur
+	sudo service gogo restart
+
+	rm $TMP
 EOF
