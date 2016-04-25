@@ -1,22 +1,17 @@
 {{define "title"}}{{if eq .Last "f"}}Game Over - {{end}}{{.Black}} vs. {{.White}} - Go{{end}}
 
 {{define "content"}}
-<h1 id="title">Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
+{{if eq "" .Black .White}}
+  <h2>Waiting for opponent...</h2>
+  <p>Share this link to get started:<br><a href="/game/{{.Key}}">https://go.waits.io/game/{{.Key}}</a></p>
+{{else}}
+  <h1 id="title">Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
 
-{{if ne .Last "f"}}
-  <p>
-    <form>
-      <strong>Player</strong>
-      <label><input type="radio" id="color_1" name="color" value="1" data-color="black" /> {{.Black}} (black)</label>
-      <label><input type="radio" id="color_2" name="color" value="2" data-color="white" /> {{.White}} (white)</label>
-    </form>
-  </p>
+  <p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
+  {{if ne .Last "f"}}<p><button id="pass">Pass</button></p>{{end}}
 {{end}}
 
-<p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
-{{if ne .Last "f"}}<p><button id="pass">Pass</button></p>{{end}}
-
-<div id="board" class="inactive">
+<div id="board">
   {{$s := .ZeroSize}}
   {{range $y, $row := .Board}}
   <div class="row">

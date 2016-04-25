@@ -23,6 +23,9 @@ type Handler struct {
 
 // ServeHTTP is called on a reqHandler by net/http; Satisfies http.Handler
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if m := r.FormValue("_method"); len(m) > 0 {
+		r.Method = strings.ToUpper(m)
+	}
 	status, err := h.Fn(h.Context, w, r)
 	if err != nil {
 		switch status {
@@ -42,7 +45,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func StaticHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.URL.Path {
 	case "/":
-		games := model.Recent(20)
+		games := model.Recent()
 		return http.StatusOK, RenderTemplate(c, w, "home", games)
 	case "/new":
 		return http.StatusOK, RenderTemplate(c, w, "new", nil)

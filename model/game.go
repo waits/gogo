@@ -55,26 +55,31 @@ func Load(key string) (*Game, error) {
 }
 
 // New creates a game using a hash of the game parameters
-func New(black string, white string, size int, hdcp int) (*Game, error) {
+func New(name string, color string, size int, hdcp int) (*Game, error) {
 	if size > 19 || size < 9 || size%2 == 0 {
 		return nil, errors.New("New game: invalid board size")
-	} else if len(black) == 0 || len(white) == 0 {
-		return nil, errors.New("New game: missing player name(s)")
-	} else if len(black) > 35 || len(white) > 35 {
-		return nil, errors.New("New game: player name(s) are too long")
+	} else if len(name) == 0 {
+		return nil, errors.New("New game: name is required")
+	} else if len(color) == 0 {
+		return nil, errors.New("New game: color is required")
+	} else if len(name) > 35 {
+		return nil, errors.New("New game: name is too long")
 	} else if hdcp > 0 && size != 19 {
 		return nil, errors.New("New game: handicap only available on 19x19 boards")
 	}
-	turnstr := strconv.Itoa(1)
-	key := hashGameParams(black + white + turnstr)
-	g := &Game{Key: key, Black: black, White: white, Size: size, Turn: 1, Ko: -1, Handicap: hdcp}
+	key := hashGameParams(name, color, strconv.Itoa(size), strconv.Itoa(hdcp))
+	g := &Game{Key: key, Size: size, Turn: 1, Ko: -1, Handicap: hdcp}
+	if color == "black" {
+		g.Black = name
+	} else {
+		g.White = name
+	}
 	args := redis.Args{}.Add("game:" + key).AddFlat(g)
 
 	conn := pool.Get()
 	defer conn.Close()
 
 	conn.Send("HMSET", args...)
-	conn.Send("HMSET", "games", g.Path(), g.Key)
 	_, err := conn.Do("EXPIRE", "game:"+key, staleGameTTL)
 	if err != nil {
 		return nil, errors.New("new game: could not connect to database")
@@ -88,27 +93,46 @@ func New(black string, white string, size int, hdcp int) (*Game, error) {
 		}
 		bstr := gridBytes(g.Board)
 		conn.Send("SET", "game:board:"+g.Key, bstr)
-		conn.Send("HSET", "game:" + key, "Turn", 2)
+		conn.Send("HSET", "game:"+key, "Turn", 2)
 	}
 
 	return g, nil
 }
 
-// Recent returns a slice of recently created games
-func Recent(n int) []*Game {
+// Join adds a player to a game
+func (g *Game) Join(name string) string {
 	conn := pool.Get()
 	defer conn.Close()
-	keys, err := redis.StringMap(conn.Do("HGETALL", "games"))
+
+	key := "game:" + g.Key
+	var c string
+	if g.Black == "" {
+		c = "Black"
+	} else {
+		c = "White"
+	}
+
+	conn.Send("HSET", key, c, name)
+	conn.Send("LPUSH", "games", g.Key)
+	conn.Do("PUBLISH", key, "join")
+	return strings.ToLower(c)
+}
+
+// Recent returns a slice of recently created games
+func Recent() []*Game {
+	conn := pool.Get()
+	defer conn.Close()
+	keys, err := redis.Strings(conn.Do("LRANGE", "games", 0, -1))
 	if err != nil {
 		panic(err)
 	}
 
 	games := make([]*Game, 0, len(keys))
-	for p, k := range keys {
+	for _, k := range keys {
 		if g, err := Load(k); err == nil {
 			games = append(games, g)
 		} else {
-			conn.Do("HDEL", "games", p)
+			conn.Do("LREM", "games", 0, k)
 		}
 	}
 
@@ -137,10 +161,11 @@ func Subscribe(key string, callback func(*Game)) {
 }
 
 // Move makes a move at a given coordinate and saves the game
-func (g *Game) Move(color int, mx int, my int) error {
+func (g *Game) Move(color string, mx int, my int) error {
+	player := colorInt(color)
 	if g.Last == "f" {
 		return errors.New("Illegal move: game over")
-	} else if color != 2-g.Turn%2 {
+	} else if player != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
 	} else if g.Board[my][mx] != 0 {
 		return errors.New("Illegal move: point already occupied")
@@ -148,7 +173,7 @@ func (g *Game) Move(color int, mx int, my int) error {
 		return errors.New("Illegal move: ko")
 	}
 
-	g.Board[my][mx] = color
+	g.Board[my][mx] = player
 
 	point := Point{mx, my}
 	captured, err := point.CheckLife(g.Board)
@@ -169,10 +194,11 @@ func (g *Game) Move(color int, mx int, my int) error {
 }
 
 // Pass increments the turn number without making a move
-func (g *Game) Pass(color int) error {
+func (g *Game) Pass(color string) error {
+	player := colorInt(color)
 	if g.Last == "f" {
 		return errors.New("Illegal move: game over")
-	} else if color != 2-g.Turn%2 {
+	} else if player != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
 	}
 
@@ -207,16 +233,16 @@ func (g *Game) Save(cap int, grid string) {
 	conn.Do("PUBLISH", key, "move")
 }
 
-// Path returns a pretty pathname for the game
-func (g *Game) Path() string {
-	b := strings.Replace(g.Black, " ", "-", -1)
-	w := strings.Replace(g.White, " ", "-", -1)
-	return strings.ToLower(b) + "-vs-" + strings.ToLower(w)
-}
-
 // ZeroSize returns one less than the game board size
 func (g *Game) ZeroSize() int {
 	return g.Size - 1
+}
+
+func colorInt(color string) int {
+	if color == "black" {
+		return 1
+	}
+	return 2
 }
 
 func parseBoard(grid string, size int) [][]int {
@@ -247,9 +273,10 @@ func gridBytes(board [][]int) string {
 }
 
 // Returns the SHA-224 checksum of the game parameters truncated to 64 bits
-func hashGameParams(params string) string {
+func hashGameParams(params ...string) string {
 	time := time.Now().Unix()
-	uniq := []byte(strconv.FormatInt(time, 10) + params)
+	pstr := strings.Join(params, "\n")
+	uniq := []byte(strconv.FormatInt(time, 10) + pstr)
 	checksum := sha256.Sum224(uniq)
 	hexid := hex.EncodeToString(checksum[:8])
 	return hexid

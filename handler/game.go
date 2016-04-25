@@ -22,13 +22,20 @@ func GameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		return http.StatusNotFound, err
 	}
 
+	cookie, _ := r.Cookie(key)
+
 	if r.Method == "PUT" {
-		return updateGame(r, game)
-	} else if strings.Contains(key, "-vs-") {
-		return http.StatusOK, RenderTemplate(c, w, "watch", game)
-	} else {
+		if cookie == nil {
+			return joinGame(w, r, game)
+		}
+		return updateGame(w, r, game, cookie.Value)
+	} else if cookie != nil {
 		return http.StatusOK, RenderTemplate(c, w, "game", game)
+	} else if game.Black == "" || game.White == "" {
+		return http.StatusOK, RenderTemplate(c, w, "join", game)
 	}
+
+	return http.StatusOK, RenderTemplate(c, w, "watch", game)
 }
 
 // LiveHandler sends game updates to a WebSocket connection
@@ -52,19 +59,30 @@ func LiveHandler(ws *websocket.Conn) {
 func createGame(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	size, _ := strconv.Atoi(r.FormValue("size"))
 	handi, _ := strconv.Atoi(r.FormValue("handicap"))
-	black := r.FormValue("black")
-	white := r.FormValue("white")
-	game, err := model.New(black, white, size, handi)
+	name := r.FormValue("name")
+	color := r.FormValue("color")
+
+	game, err := model.New(name, color, size, handi)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}
+
+	http.SetCookie(w, &http.Cookie{Name: game.Key, Value: color, MaxAge: 604800})
 	http.Redirect(w, r, "/game/"+game.Key, 303)
 	return http.StatusSeeOther, nil
 }
 
-func updateGame(r *http.Request, game *model.Game) (int, error) {
-	color, _ := strconv.Atoi(r.FormValue("color"))
+func joinGame(w http.ResponseWriter, r *http.Request, game *model.Game) (int, error) {
+	name := r.FormValue("name")
+	color := game.Join(name)
+	http.SetCookie(w, &http.Cookie{Name: game.Key, Value: color, MaxAge: 604800})
+	http.Redirect(w, r, "/game/"+game.Key, 303)
+	return http.StatusSeeOther, nil
+}
+
+func updateGame(w http.ResponseWriter, r *http.Request, game *model.Game, color string) (int, error) {
 	var err error
+
 	if pass := r.FormValue("pass"); pass != "" {
 		err = game.Pass(color)
 	} else {
@@ -72,6 +90,7 @@ func updateGame(r *http.Request, game *model.Game) (int, error) {
 		y, _ := strconv.Atoi(r.FormValue("y"))
 		err = game.Move(color, x, y)
 	}
+
 	if err != nil {
 		return http.StatusBadRequest, err
 	}

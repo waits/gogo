@@ -1,0 +1,27 @@
+{{define "title"}}Join Game - Go{{end}}
+{{define "content"}}
+<h1>Join Game</h1>
+
+<form method="post" action="">
+  <input type="hidden" name="_method" value="put" />
+  <p>
+    <label>Name</label>
+    <input name="name" placeholder="e.g. Bob" />
+  </p>
+  <p>
+    <label>Size</label>
+    <strong>{{.Size}}x{{.Size}}</strong>
+  </p>
+  <p>
+    <label>Color</label>
+    <strong>{{if .Black}}White{{else}}Black{{end}}</strong>
+  </p>
+  {{if .Handicap}}
+    <p>
+      <label>Handicap</label>
+      <strong>{{.Handicap}}</strong>
+    </p>
+  {{end}}
+  <button type="submit">Start Game</button>
+</form>
+{{end}}

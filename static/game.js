@@ -7,16 +7,10 @@ var GameController = function(board, passBtn, key, black, white) {
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
-    if (passBtn && black && white) {
+    if (passBtn) {
         var failedAttempts = 0, timer, turn;
-        var color = localStorage.getItem(key);
-        if (color) {
-            document.getElementById('color_'+color).checked = true;
-            board.classList.remove('inactive');
-            board.classList.add(color == 1 ? 'black' : 'white');
-        }
-        document.forms[0].color[0].addEventListener('change', setColor);
-        document.forms[0].color[1].addEventListener('change', setColor);
+        var color = document.cookie.substr(document.cookie.indexOf(key) + 17, 5);
+        board.classList.add(color);
         passBtn.addEventListener('click', pass);
     }
     connect();
@@ -31,7 +25,7 @@ var GameController = function(board, passBtn, key, black, white) {
             clearInterval(timer);
             document.title = black + ' vs. ' + white + ' - Go';
             failedAttempts = 0;
-            if (color) board.classList.remove('disabled');
+            board.classList.remove('disabled');
             console.info('WebSocket connected');
         };
     }
@@ -39,6 +33,7 @@ var GameController = function(board, passBtn, key, black, white) {
     function messageHandler(event) {
         var g = JSON.parse(event.data);
         if (g.Last === 'f') document.location.reload();
+        else if (black != g.Black || white != g.White) document.location.reload();
 
         document.getElementById('turn').textContent = g.Turn;
         document.getElementById('blackscr').textContent = g.BlackScr;
@@ -62,8 +57,9 @@ var GameController = function(board, passBtn, key, black, white) {
             }
         }
 
-        if (2 - g.Turn % 2 == color) {
+        if ((g.Turn % 2 == 1) == (color == 'black') && !document.getElementById('turn-notice')) {
             notice = document.createElement('div');
+            notice.id = 'turn-notice';
             notice.className = 'notice';
             notice.textContent = 'Your turn!';
             document.body.insertBefore(notice, document.getElementById('title'));
@@ -96,21 +92,8 @@ var GameController = function(board, passBtn, key, black, white) {
         console.warn('WebSocket closed, attempt ' + failedAttempts + ', reconnecting in ' + wait + 's');
     }
 
-    // Save color selection in local storage and log error if it fails
-    function setColor(event) {
-        color = this.value;
-        board.classList.remove('inactive', 'black', 'white');
-        board.classList.add(this.dataset.color);
-        try {
-            localStorage.setItem(key, color);
-        } catch (e) {
-            console.error('Local storage is not available.');
-        }
-    }
-
     function clickHandler(event) {
         if (board.classList.contains('disabled') || board.classList.contains('inactive')) return;
-        if (!color) return;
 
         var x = indexOf(this);
         var y = indexOf(this.parentNode);
@@ -121,7 +104,6 @@ var GameController = function(board, passBtn, key, black, white) {
 
     function pass(event) {
         if (board.classList.contains('disabled') || board.classList.contains('inactive')) return;
-        if (!color) return;
 
         var data = 'color=' + color + '&pass=true';
         ajax('PUT', window.location.href, data, response);
