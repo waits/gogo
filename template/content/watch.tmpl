@@ -1,7 +1,7 @@
 {{define "title"}}{{if eq .Last "f"}}Game Over - {{end}}{{.Black}} vs. {{.White}} - Go{{end}}
 
 {{define "content"}}
-<h1>Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
+<h1 id="title">Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
 
 <p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
 
@@ -15,7 +15,7 @@
         <line x1="{{if eq $x 0}}15{{else}}0{{end}}" y1="15" x2="{{if eq $x $s}}15{{else}}30{{end}}" y2="15" stroke="black" stroke-width="1" />
         <line x1="15" y1="{{if eq $y 0}}15{{else}}0{{end}}" x2="15" y2="{{if eq $y $s}}15{{else}}30{{end}}" stroke="black" stroke-width="1" />
       </svg>
-      {{if eq $stone 1}}<div class="stone black"></div>{{else if eq $stone 2}}<div class="stone white"></div>{{end}}
+      {{if eq $stone 1}}<div class="stone black"></div>{{else if eq $stone 2}}<div class="stone white"></div>{{else}}<div class="stone hide"></div>{{end}}
     </div>
     {{end}}
   </div>
@@ -28,7 +28,7 @@
   <script>
     'use strict';
     var board = document.getElementById('board');
-    board && new GameController(board, null, {{.Black}}, {{.White}});
+    board && new GameController(board, null, null, {{.Black}}, {{.White}});
   </script>
 {{end}}
 {{end}}

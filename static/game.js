@@ -33,7 +33,8 @@ var GameController = function(board, passBtn, key, black, white) {
     function messageHandler(event) {
         var g = JSON.parse(event.data);
         if (g.Last === 'f') document.location.reload();
-        else if (black != g.Black || white != g.White) document.location.reload();
+        else if (black != g.Black ^ white != g.White) document.location.reload();
+        else if (!document.getElementById('turn')) return;
 
         document.getElementById('turn').textContent = g.Turn;
         document.getElementById('blackscr').textContent = g.BlackScr;
@@ -57,7 +58,7 @@ var GameController = function(board, passBtn, key, black, white) {
             }
         }
 
-        if ((g.Turn % 2 == 1) == (color == 'black') && !document.getElementById('turn-notice')) {
+        if (color && (g.Turn % 2 == 1) == (color == 'black') && !document.getElementById('turn-notice')) {
             notice = document.createElement('div');
             notice.id = 'turn-notice';
             notice.className = 'notice';
