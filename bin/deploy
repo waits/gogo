@@ -21,7 +21,7 @@ ssh -i .etc/id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<-EOF
 	tar -xzf $TMP -C $DIR --strip-components=1
 
 	ln -nsf $DIR $ROOT/cur
-	sudo service gogo restart
+	sudo service go restart
 
 	rm $TMP
 EOF
