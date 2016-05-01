@@ -161,22 +161,21 @@ func Subscribe(key string, callback func(*Game)) {
 }
 
 // Move makes a move at a given coordinate and saves the game
-func (g *Game) Move(color string, mx int, my int) error {
+func (g *Game) Move(color string, p Point) error {
 	player := colorInt(color)
 	if g.Last == "f" {
 		return errors.New("Illegal move: game over")
 	} else if player != 2-g.Turn%2 {
 		return errors.New("Illegal move: not your turn")
-	} else if g.Board[my][mx] != 0 {
+	} else if g.Board[p.Y][p.X] != 0 {
 		return errors.New("Illegal move: point already occupied")
-	} else if g.Ko == mx*19+my {
+	} else if g.Ko == p.X*19+p.Y {
 		return errors.New("Illegal move: ko")
 	}
 
-	g.Board[my][mx] = player
+	g.Board[p.Y][p.X] = player
 
-	point := Point{mx, my}
-	captured, err := point.CheckLife(g.Board)
+	captured, err := p.CheckLife(g.Board)
 	if err != nil {
 		return err
 	}
@@ -187,7 +186,7 @@ func (g *Game) Move(color string, mx int, my int) error {
 	}
 
 	bstr := gridBytes(g.Board)
-	g.Last = strconv.Itoa(mx*19 + my)
+	g.Last = strconv.Itoa(p.X*19 + p.Y)
 	g.Save(len(captured), bstr)
 
 	return nil
@@ -245,6 +244,7 @@ func colorInt(color string) int {
 	return 2
 }
 
+// Converts a binary string into a two-dimensional slice
 func parseBoard(grid string, size int) [][]int {
 	board := make([][]int, size)
 	for y := range board {
@@ -259,6 +259,7 @@ func parseBoard(grid string, size int) [][]int {
 	return board
 }
 
+// Converts a two-dimensional slice into a binary string
 func gridBytes(board [][]int) string {
 	l := len(board)
 	bytesize := l*l/4 + 1
