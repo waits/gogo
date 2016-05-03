@@ -2,23 +2,24 @@ package handler
 
 import (
 	"errors"
-	"github.com/waits/gogo/model"
 	"html/template"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/waits/gogo/model"
 )
 
-// Context holds a map of cached templates
-type Context struct {
+// Env holds a map of cached templates
+type Env struct {
 	Templates    map[string]*template.Template
 	TemplatePath string
 }
 
-// Handler wraps a route handler with a Context
+// Handler wraps a route handler with a Env
 type Handler struct {
-	*Context
-	Fn func(*Context, http.ResponseWriter, *http.Request) (int, error)
+	*Env
+	Fn func(*Env, http.ResponseWriter, *http.Request) (int, error)
 }
 
 // ServeHTTP is called on a reqHandler by net/http; Satisfies http.Handler
@@ -26,7 +27,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if m := r.FormValue("_method"); len(m) > 0 {
 		r.Method = strings.ToUpper(m)
 	}
-	status, err := h.Fn(h.Context, w, r)
+	status, err := h.Fn(h.Env, w, r)
 	if err != nil {
 		switch status {
 		case http.StatusNotFound:
@@ -35,22 +36,22 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), status)
 		default:
 			status = http.StatusInternalServerError
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 	log.Printf("%s %s %s %d", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path, status)
 }
 
 // StaticHandler responds to static routes not covered by another handler
-func StaticHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
+func StaticHandler(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.URL.Path {
 	case "/":
 		games := model.Recent()
-		return http.StatusOK, RenderTemplate(c, w, "home", games)
+		return http.StatusOK, RenderTemplate(env, w, "home", games)
 	case "/new":
-		return http.StatusOK, RenderTemplate(c, w, "new", nil)
+		return http.StatusOK, RenderTemplate(env, w, "new", nil)
 	case "/help":
-		return http.StatusOK, RenderTemplate(c, w, "help", nil)
+		return http.StatusOK, RenderTemplate(env, w, "help", nil)
 	default:
 		return http.StatusNotFound, errors.New("handler: page not found")
 	}

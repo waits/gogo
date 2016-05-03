@@ -3,30 +3,32 @@ package main
 
 import (
 	"flag"
-	"github.com/waits/gogo/handler"
-	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
+
+	"github.com/waits/gogo/handler"
+	"github.com/waits/gogo/model"
+	"golang.org/x/net/websocket"
 )
 
 var (
+	db           = flag.Int("db", 0, "Redis database number")
 	httpAddr     = flag.String("http", "localhost:8080", "HTTP listen address")
-	templatePath = flag.String("template", "template/", "path to template files")
-	staticPath   = flag.String("static", "static/", "path to static files")
 	reload       = flag.Bool("reload", false, "reload templates for every request")
 )
 
 func main() {
 	flag.Parse()
-	t := handler.LoadTemplates(*templatePath)
+	t := handler.LoadTemplates("template/")
 	if *reload {
 		t = nil
 	}
-	c := &handler.Context{t, *templatePath}
+	env := &handler.Env{t, "template/"}
+	model.InitPool(*db)
 
 	log.Printf("Starting server at http://%s\n", *httpAddr)
-	http.Handle("/", handler.Handler{c, handler.StaticHandler})
-	http.Handle("/game/", handler.Handler{c, handler.GameHandler})
+	http.Handle("/", handler.Handler{env, handler.StaticHandler})
+	http.Handle("/game/", handler.Handler{env, handler.GameHandler})
 	http.Handle("/static/", http.FileServer(http.Dir("./")))
 	http.Handle("/live/game/", websocket.Handler(handler.LiveHandler))
 	http.ListenAndServe(*httpAddr, nil)

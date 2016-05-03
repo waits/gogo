@@ -18,7 +18,6 @@ func LoadTemplates(path string) map[string]*template.Template {
 	if err != nil {
 		panic(err)
 	}
-	// 	funcMap := template.FuncMap{"incr": incr}
 	for _, page := range pages {
 		files := append(layouts, page)
 		templates[filepath.Base(page)] = template.Must(template.New(page).ParseFiles(files...))
@@ -27,10 +26,10 @@ func LoadTemplates(path string) map[string]*template.Template {
 }
 
 // RenderTemplate renders an HTML template from the cache using provided data
-func RenderTemplate(c *Context, w http.ResponseWriter, name string, data interface{}) error {
-	tmpls := c.Templates
-	if c.Templates == nil {
-		tmpls = LoadTemplates(c.TemplatePath)
+func RenderTemplate(env *Env, w http.ResponseWriter, name string, data interface{}) error {
+	tmpls := env.Templates
+	if env.Templates == nil {
+		tmpls = LoadTemplates(env.TemplatePath)
 	}
 	tmpl, ok := tmpls[name+".tmpl"]
 	if !ok {

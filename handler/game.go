@@ -2,18 +2,19 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/waits/gogo/model"
-	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/waits/gogo/model"
+	"golang.org/x/net/websocket"
 )
 
 // GameHandler creates, updates, or loads a Game
-func GameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
+func GameHandler(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Method == "POST" {
-		return createGame(c, w, r)
+		return createGame(env, w, r)
 	}
 
 	key := r.URL.Path[6:]
@@ -30,12 +31,12 @@ func GameHandler(c *Context, w http.ResponseWriter, r *http.Request) (int, error
 		}
 		return updateGame(w, r, game, cookie.Value)
 	} else if cookie != nil {
-		return http.StatusOK, RenderTemplate(c, w, "game", game)
+		return http.StatusOK, RenderTemplate(env, w, "game", game)
 	} else if game.Black == "" || game.White == "" {
-		return http.StatusOK, RenderTemplate(c, w, "join", game)
+		return http.StatusOK, RenderTemplate(env, w, "join", game)
 	}
 
-	return http.StatusOK, RenderTemplate(c, w, "watch", game)
+	return http.StatusOK, RenderTemplate(env, w, "watch", game)
 }
 
 // LiveHandler sends game updates to a WebSocket connection
@@ -56,7 +57,7 @@ func LiveHandler(ws *websocket.Conn) {
 	model.Subscribe(game.Key, sendMsg)
 }
 
-func createGame(c *Context, w http.ResponseWriter, r *http.Request) (int, error) {
+func createGame(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
 	size, _ := strconv.Atoi(r.FormValue("size"))
 	handi, _ := strconv.Atoi(r.FormValue("handicap"))
 	name := r.FormValue("name")
