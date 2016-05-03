@@ -6,6 +6,8 @@ go:
 - 1.6.2
 go_import_path: github.com/waits/gogo
 env: GIMME_OS=linux GIMME_ARCH=amd64
+services:
+  - redis-server
 deploy:
   provider: script
   script: bin/deploy
