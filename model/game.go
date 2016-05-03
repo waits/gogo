@@ -30,30 +30,6 @@ type Game struct {
 	Board    [][]int `redis:"-"`
 }
 
-// Load returns a game from the database for a provided key
-func Load(key string) (*Game, error) {
-	conn := pool.Get()
-	defer conn.Close()
-	if strings.Contains(key, "-vs-") {
-		key, _ = redis.String(conn.Do("HGET", "games", key))
-	}
-	resp, err := conn.Do("HGETALL", "game:"+key)
-	if err != nil {
-		return nil, errors.New("load game: could not connect to database")
-	}
-	attrs := resp.([]interface{})
-	if len(attrs) == 0 {
-		return nil, errors.New("load game: game not found")
-	}
-	g := &Game{Key: key}
-	redis.ScanStruct(attrs, g)
-
-	grid, _ := redis.String(conn.Do("GET", "game:board:"+key))
-	g.Board = parseBoard(grid, g.Size)
-
-	return g, nil
-}
-
 // New creates a game using a hash of the game parameters
 func New(name string, color string, size int, hdcp int) (*Game, error) {
 	if size > 19 || size < 9 || size%2 == 0 {
@@ -95,6 +71,30 @@ func New(name string, color string, size int, hdcp int) (*Game, error) {
 		conn.Send("SET", "game:board:"+g.Key, bstr)
 		conn.Send("HSET", "game:"+key, "Turn", 2)
 	}
+
+	return g, nil
+}
+
+// Load returns a game from the database for a provided key
+func Load(key string) (*Game, error) {
+	conn := pool.Get()
+	defer conn.Close()
+	if strings.Contains(key, "-vs-") {
+		key, _ = redis.String(conn.Do("HGET", "games", key))
+	}
+	resp, err := conn.Do("HGETALL", "game:"+key)
+	if err != nil {
+		return nil, errors.New("load game: could not connect to database")
+	}
+	attrs := resp.([]interface{})
+	if len(attrs) == 0 {
+		return nil, errors.New("load game: game not found")
+	}
+	g := &Game{Key: key}
+	redis.ScanStruct(attrs, g)
+
+	grid, _ := redis.String(conn.Do("GET", "game:board:"+key))
+	g.Board = parseBoard(grid, g.Size)
 
 	return g, nil
 }
@@ -187,7 +187,7 @@ func (g *Game) Move(color string, p Point) error {
 
 	bstr := gridBytes(g.Board)
 	g.Last = strconv.Itoa(p.X*19 + p.Y)
-	g.Save(len(captured), bstr)
+	g.save(len(captured), bstr)
 
 	return nil
 }
@@ -207,13 +207,18 @@ func (g *Game) Pass(color string) error {
 	} else {
 		g.Last = "p"
 	}
-	g.Save(0, "")
+	g.save(0, "")
 
 	return nil
 }
 
+// ZeroSize returns one less than the game board size
+func (g *Game) ZeroSize() int {
+	return g.Size - 1
+}
+
 // Save persists the game to the database
-func (g *Game) Save(cap int, grid string) {
+func (g *Game) save(cap int, grid string) {
 	conn := pool.Get()
 	defer conn.Close()
 
@@ -230,11 +235,6 @@ func (g *Game) Save(cap int, grid string) {
 	conn.Send("EXPIRE", key, staleGameTTL)
 	conn.Send("EXPIRE", "game:board:"+g.Key, staleGameTTL)
 	conn.Do("PUBLISH", key, "move")
-}
-
-// ZeroSize returns one less than the game board size
-func (g *Game) ZeroSize() int {
-	return g.Size - 1
 }
 
 func colorInt(color string) int {

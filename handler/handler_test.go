@@ -20,12 +20,15 @@ func init() {
 	defer conn.Close()
 
 	conn.Send("FLUSHDB")
-	g := &model.Game{Key: "1", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Aaron", White: "Job"}
-	args := redis.Args{}.Add("game:" + "1").AddFlat(g)
-	conn.Send("HMSET", args...)
-	g = &model.Game{Key: "2", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Frank"}
-	args = redis.Args{}.Add("game:" + "2").AddFlat(g)
-	conn.Do("HMSET", args...)
+	games := []model.Game{
+		{Key: "1", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Aaron", White: "Job"},
+		{Key: "2", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Frank"},
+	}
+	for _, g := range games {
+		args := redis.Args{}.Add("game:" + g.Key).AddFlat(g)
+		conn.Send("HMSET", args...)
+	}
+	conn.Flush()
 }
 
 func recordRequest(t *testing.T, fn func(*Env, http.ResponseWriter, *http.Request) (int, error),
