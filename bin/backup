@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Uploads a database dump to Dropbox
+
+UPLOAD_URL="https://content.dropboxapi.com/2/files/upload"
+DATE=$(date +%Y/%h/%Y%m%d%H%M%S_nightly)
+
+curl -X POST $UPLOAD_URL \
+	--header "Authorization: Bearer $DROPBOX_ACCESS_TOKEN" \
+	--header "Dropbox-API-Arg: {\"path\": \"/$DATE\", \"mode\": \"add\", \"autorename\": true, \"mute\": false}" \
+	--header "Content-Type: application/octet-stream" \
+	--data-binary @/var/lib/redis/dump.rdb
