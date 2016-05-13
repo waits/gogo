@@ -16,12 +16,22 @@ pushd ..
 popd
 
 ssh -i .etc/id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<-EOF
-	set -x
+	set -e -x
+
+	echo "Unpacking..."
 	mkdir -p $DIR
 	tar -xzf $TMP -C $DIR --strip-components=1
 
+	echo "Saving database snapshot..."
+	$DIR/bin/backup
+
+	echo "Updating symlink..."
 	ln -nsf $DIR $ROOT/cur
 	sudo service go restart
 
+	echo "Cleaning up old releases..."
 	rm $TMP
+	cd $ROOT/rel && ls -t | tail -n +6 | xargs rm -rf
+
+	echo "Done!"
 EOF
