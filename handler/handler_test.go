@@ -33,24 +33,24 @@ func init() {
 
 func recordRequest(t *testing.T, fn func(*Env, http.ResponseWriter, *http.Request) (int, error),
 	method string, path string, data string, cookies ...*http.Cookie) *httptest.ResponseRecorder {
-		body := strings.NewReader(data)
-		req, err := http.NewRequest(method, path, body)
-		if err != nil {
-			t.Fatal(err)
-		}
+	body := strings.NewReader(data)
+	req, err := http.NewRequest(method, path, body)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-		if len(data) > 0 {
-			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		}
-		for _, c := range cookies {
-			req.AddCookie(c)
-		}
+	if len(data) > 0 {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
 
-		rec := httptest.NewRecorder()
-		handler := http.Handler(Handler{env, fn})
-		handler.ServeHTTP(rec, req)
+	rec := httptest.NewRecorder()
+	handler := http.Handler(Handler{env, fn})
+	handler.ServeHTTP(rec, req)
 
-		return rec
+	return rec
 }
 
 func testStatusCode(t *testing.T, rec *httptest.ResponseRecorder, expected int) {

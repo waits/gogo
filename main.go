@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	db           = flag.Int("db", 0, "Redis database number")
-	httpAddr     = flag.String("http", "localhost:8080", "HTTP listen address")
-	reload       = flag.Bool("reload", false, "reload templates for every request")
+	db       = flag.Int("db", 0, "Redis database number")
+	httpAddr = flag.String("http", "localhost:8080", "HTTP listen address")
+	reload   = flag.Bool("reload", false, "reload templates for every request")
 )
 
 func main() {
