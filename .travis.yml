@@ -1,5 +1,3 @@
-sudo: requred
-dist: trusty
 language: go
 go:
 - 1.6.3
