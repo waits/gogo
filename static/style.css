@@ -2,6 +2,40 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: "Inconsolata";
+  font-weight: normal;
+  src: url("inconsolata-regular.woff");
+}
+@font-face {
+  font-family: "Inconsolata";
+  font-weight: bold;
+  src: url("inconsolata-bold.woff");
+}
+
+body {
+  color: #212121;
+  font-family: "Inconsolata", monospace;
+  font-weight: normal;
+}
+
+a, a:visited {
+  color: rgb(0, 0, 238);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+section, header, footer {
+  margin: 0 auto;
+  width: 600px;
+}
+section {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 .hide {
   display: none;
 }

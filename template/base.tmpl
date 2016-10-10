@@ -9,12 +9,18 @@
         <script src="/static/game.js" charset="utf-8"></script>
     </head>
     <body>
-        {{template "content" .}}
+        <section>
+          {{template "content" .}}
+        </section>
+
         {{template "script" .}}
+
         <footer>
             <hr>
             <p><a href="/">Home</a> • <a href="/help">Help</a></p>
-            <p><small>© 2016 Dylan Waits. This website is <a href="https://github.com/waits/gogo">open source</a>.</small></p>
+            <p>
+              <small>Created by <a href="https://waits.io">Dylan Waits</a>. This website is <a href="https://github.com/waits/gogo">open source.</a></p>
+            </p>
         </footer>
     </body>
 </html>

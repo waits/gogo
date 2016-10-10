@@ -4,6 +4,7 @@ var GameController = function(board, passBtn, key, black, white) {
     var notice;
     var title = black + ' vs. ' + white + ' - Go';
     var cells = board.getElementsByClassName('cell');
+    var title = document.getElementById('title');
     for (var i=0; i<cells.length; i++) {
         cells[i].addEventListener('click', clickHandler);
     }
@@ -63,7 +64,7 @@ var GameController = function(board, passBtn, key, black, white) {
             notice.id = 'turn-notice';
             notice.className = 'notice';
             notice.textContent = 'Your turn!';
-            document.body.insertBefore(notice, document.getElementById('title'));
+            document.body.children[0].insertBefore(notice, title);
             if (!document.hasFocus()) flashTitle();
         }
     }
