@@ -11,7 +11,7 @@ DIR=$ROOT/rel/$HASH
 TMP=/tmp/gogo-$HASH.tar.gz
 SERVICE_DIR=/lib/systemd/system
 
-tar -czf gogo.tar.gz bin/backup static template gogo
+tar -czf gogo.tar.gz ./bin/backup ./static ./template ./gogo
 scp -i etc/id_ecdsa -o StrictHostKeyChecking=no gogo.tar.gz $HOST:$TMP
 scp -i etc/id_ecdsa -o StrictHostKeyChecking=no etc/gogo.service $HOST:$SERVICE_DIR
 
