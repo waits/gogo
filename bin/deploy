@@ -4,19 +4,21 @@
 
 set -e -x
 
-ROOT=/srv/go
+HOST=root@go.waits.io
+ROOT=/var/www/gogo
 HASH=$(git rev-parse --short=7 HEAD)
 DIR=$ROOT/rel/$HASH
 TMP=/tmp/gogo-$HASH.tar.gz
+SERVICE_DIR=/lib/systemd/system
 
-pushd ..
-	tar --exclude=".*" -czf gogo.tar.gz gogo
-	scp -i gogo/.etc/id_ecdsa -o StrictHostKeyChecking=no gogo.tar.gz dylan@go.waits.io:$TMP
-	rm gogo.tar.gz
-popd
+tar -czf gogo.tar.gz bin/backup static template gogo
+scp -i etc/id_ecdsa -o StrictHostKeyChecking=no gogo.tar.gz $HOST:$TMP
+scp -i etc/id_ecdsa -o StrictHostKeyChecking=no etc/gogo.service $HOST:$SERVICE_DIR
 
-ssh -i .etc/id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<-EOF
+ssh -i etc/id_ecdsa -o StrictHostKeyChecking=no $HOST <<-EOF
 	set -e -x
+
+	systemctl daemon-reload
 
 	mkdir -p $DIR
 	tar -xzf $TMP -C $DIR --strip-components=1
@@ -24,7 +26,7 @@ ssh -i .etc/id_ecdsa -o StrictHostKeyChecking=no dylan@go.waits.io <<-EOF
 	$DIR/bin/backup
 
 	ln -nsf $DIR $ROOT/cur
-	sudo service go restart
+	sudo service gogo restart
 
 	rm $TMP
 	cd $ROOT/rel && ls -t | tail -n +6 | xargs rm -rf

@@ -14,7 +14,7 @@ quit() {
 
 while getopts "ho" opt; do
     case $opt in
-	    h) echo "usage: run [-o]"; exit;;
+        h) echo "usage: run [-o]"; exit;;
         o) open=true;;
         *) exit;;
     esac

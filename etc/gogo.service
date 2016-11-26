@@ -1,0 +1,14 @@
+[Unit]
+Description=Go app server
+After=redis-server.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/var/www/gogo/cur
+
+ExecStart=/bin/bash -c "/var/www/gogo/cur/gogo"
+
+[Install]
+WantedBy=multi-user.target
