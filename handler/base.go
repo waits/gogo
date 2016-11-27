@@ -24,9 +24,12 @@ type Handler struct {
 
 // ServeHTTP is called on a reqHandler by net/http; Satisfies http.Handler
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("strict-transport-security", "max-age=31536000; includeSubDomains; preload")
+
 	if m := r.FormValue("_method"); len(m) > 0 {
 		r.Method = strings.ToUpper(m)
 	}
+
 	status, err := h.Fn(h.Env, w, r)
 	if err != nil {
 		switch status {
