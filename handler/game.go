@@ -11,8 +11,8 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-// GameHandler creates, updates, or loads a Game
-func GameHandler(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
+// Game creates, updates, or loads a game.
+func Game(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Method == "POST" {
 		return createGame(env, w, r)
 	}
@@ -39,8 +39,8 @@ func GameHandler(env *Env, w http.ResponseWriter, r *http.Request) (int, error) 
 	return http.StatusOK, RenderTemplate(env, w, "watch", game)
 }
 
-// LiveHandler sends game updates to a WebSocket connection
-func LiveHandler(ws *websocket.Conn) {
+// Live sends game updates to a WebSocket connection.
+func Live(ws *websocket.Conn) {
 	r := ws.Request()
 	log.Printf("%s %s %s websocket", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path)
 

@@ -71,41 +71,41 @@ func testRedirect(t *testing.T, rec *httptest.ResponseRecorder, expected string)
 	}
 }
 
-func TestStaticHandler(t *testing.T) {
-	rec := recordRequest(t, StaticHandler, "GET", "/", "")
+func TestStatic(t *testing.T) {
+	rec := recordRequest(t, Static, "GET", "/", "")
 	testStatusCode(t, rec, http.StatusOK)
 	testBody(t, rec, "No games are in progress.")
 
-	rec = recordRequest(t, StaticHandler, "GET", "/help", "")
+	rec = recordRequest(t, Static, "GET", "/help", "")
 	testStatusCode(t, rec, http.StatusOK)
 	testBody(t, rec, "Rules")
 
-	rec = recordRequest(t, StaticHandler, "GET", "/new", "")
+	rec = recordRequest(t, Static, "GET", "/new", "")
 	testStatusCode(t, rec, http.StatusOK)
 	testBody(t, rec, "New Game")
 }
 
 func TestCreateGame(t *testing.T) {
-	rec := recordRequest(t, GameHandler, "POST", "/game", "name=Marco&color=white&size=19&handicap=3")
+	rec := recordRequest(t, Game, "POST", "/game", "name=Marco&color=white&size=19&handicap=3")
 	testStatusCode(t, rec, http.StatusSeeOther)
 	testRedirect(t, rec, "/game/")
 }
 
 func TestJoinGame(t *testing.T) {
-	rec := recordRequest(t, GameHandler, "PUT", "/game/2", "name=Guy")
+	rec := recordRequest(t, Game, "PUT", "/game/2", "name=Guy")
 	testStatusCode(t, rec, http.StatusSeeOther)
 	testRedirect(t, rec, "/game/2")
 }
 
 func TestShowGame(t *testing.T) {
 	c := &http.Cookie{Name: "1", Value: "black"}
-	rec := recordRequest(t, GameHandler, "GET", "/game/1", "", c)
+	rec := recordRequest(t, Game, "GET", "/game/1", "", c)
 	testStatusCode(t, rec, http.StatusOK)
 	testBody(t, rec, "Aaron vs. Job")
 }
 
 func TestUpdateGame(t *testing.T) {
 	c := &http.Cookie{Name: "1", Value: "black"}
-	rec := recordRequest(t, GameHandler, "PUT", "/game/1", "x=1&y=2", c)
+	rec := recordRequest(t, Game, "PUT", "/game/1", "x=1&y=2", c)
 	testStatusCode(t, rec, http.StatusOK)
 }

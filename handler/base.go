@@ -10,19 +10,19 @@ import (
 	"github.com/waits/gogo/model"
 )
 
-// Env holds a map of cached templates
+// Env holds a map of cached templates.
 type Env struct {
 	Templates    map[string]*template.Template
 	TemplatePath string
 }
 
-// Handler wraps a route handler with a Env
+// Handler wraps a route handler with an Env.
 type Handler struct {
 	*Env
 	Fn func(*Env, http.ResponseWriter, *http.Request) (int, error)
 }
 
-// ServeHTTP is called on a reqHandler by net/http; Satisfies http.Handler
+// ServeHTTP is called on a reqHandler by net/http; satisfies http.Handler.
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("strict-transport-security", "max-age=31536000; includeSubDomains; preload")
 
@@ -45,8 +45,8 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s %d", strings.Split(r.RemoteAddr, ":")[0], r.Method, r.URL.Path, status)
 }
 
-// StaticHandler responds to static routes not covered by another handler
-func StaticHandler(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
+// Static responds to static routes not covered by another handler.
+func Static(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
 	switch r.URL.Path {
 	case "/":
 		games := model.Recent()
