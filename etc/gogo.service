@@ -8,7 +8,7 @@ User=root
 Group=root
 WorkingDirectory=/var/www/gogo/cur
 
-ExecStart=/bin/bash -c "/var/www/gogo/cur/gogo"
+ExecStart=/var/www/gogo/cur/gogo --addr 0.0.0.0:443 --cert /etc/letsencrypt/live/go.waits.io/fullchain.pem --key /etc/letsencrypt/live/go.waits.io/privkey.pem
 
 [Install]
 WantedBy=multi-user.target
