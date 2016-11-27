@@ -89,7 +89,7 @@ func updateGame(w http.ResponseWriter, r *http.Request, game *model.Game, color 
 	} else {
 		x, _ := strconv.Atoi(r.FormValue("x"))
 		y, _ := strconv.Atoi(r.FormValue("y"))
-		p := model.Point{x, y}
+		p := model.Point{X: x, Y: y}
 		err = game.Move(color, p)
 	}
 

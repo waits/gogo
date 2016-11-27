@@ -1,4 +1,4 @@
-// Command playgo is a web server for hosting multiplayer Go games.
+// Command gogo is a web server for hosting multiplayer Go games.
 package main
 
 import (
@@ -23,12 +23,12 @@ func main() {
 	if *reload {
 		t = nil
 	}
-	env := &handler.Env{t, "template/"}
+	env := &handler.Env{Templates: t, TemplatePath: "template/"}
 	model.InitPool(*db)
 
 	log.Printf("Starting server at http://%s\n", *httpAddr)
-	http.Handle("/", handler.Handler{env, handler.StaticHandler})
-	http.Handle("/game/", handler.Handler{env, handler.GameHandler})
+	http.Handle("/", handler.Handler{Env: env, Fn: handler.StaticHandler})
+	http.Handle("/game/", handler.Handler{Env: env, Fn: handler.GameHandler})
 	http.Handle("/static/", http.FileServer(http.Dir("./")))
 	http.Handle("/live/game/", websocket.Handler(handler.LiveHandler))
 	http.ListenAndServe(*httpAddr, nil)
