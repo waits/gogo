@@ -12,9 +12,8 @@ import (
 )
 
 var (
-	addr     = flag.String("addr", "localhost:8080", "address to listen on")
 	host     = flag.String("host", "go.waits.io", "server hostname")
-	reload   = flag.Bool("reload", false, "reload templates for every request")
+	devMode  = flag.Bool("development", false, "run in development mode")
 	certFile = flag.String("cert", "", "path to certificate chain")
 	keyFile  = flag.String("key", "", "path to private key")
 )
@@ -22,7 +21,7 @@ var (
 func main() {
 	flag.Parse()
 	t := handler.LoadTemplates("template/")
-	if *reload {
+	if *devMode {
 		t = nil
 	}
 	env := &handler.Env{Templates: t, TemplatePath: "template/"}
@@ -33,13 +32,13 @@ func main() {
 	http.Handle("/static/", http.FileServer(http.Dir("./")))
 	http.Handle("/live/game/", websocket.Handler(handler.Live))
 
-	if *certFile != "" && *keyFile != "" {
-		log.Printf("Starting server at https://" + *host)
-		redir := "https://" + *host
-		go http.ListenAndServe("0.0.0.0:80", http.RedirectHandler(redir, 301))
-		http.ListenAndServeTLS("0.0.0.0:443", *certFile, *keyFile, nil)
+	if *devMode {
+		log.Printf("Starting server at http://0.0.0.0:8080\n")
+		http.ListenAndServe("0.0.0.0:8080", nil)
 	}
 
-	log.Printf("Starting server at http://%s\n", *addr)
-	http.ListenAndServe(*addr, nil)
+	log.Printf("Starting server at https://" + *host)
+	redir := "https://" + *host
+	go http.ListenAndServe("0.0.0.0:80", http.RedirectHandler(redir, 301))
+	http.ListenAndServeTLS("0.0.0.0:443", *certFile, *keyFile, nil)
 }

@@ -25,7 +25,7 @@ redis-server --daemonize yes
 if ! go build -o gogo; then
     exit 2
 fi
-./gogo --reload &
+./gogo --development &
 if ! ps -p $! >&-; then
     echo "Failed to start application."
     exit 3
