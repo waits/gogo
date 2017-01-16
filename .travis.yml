@@ -17,8 +17,7 @@ before_install:
   -in etc/id_ecdsa.enc -out etc/id_ecdsa -d
 - chmod 600 etc/id_ecdsa
 script:
-- go test -v ./...
-- go build -v
+- bin/build
 notifications:
   email: false
   pushover:

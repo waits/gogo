@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Builds the application, uploads it to the server, and restarts the daemon.
+# Bundles the application, uploads it to the server, and restarts the daemon.
 
 set -e -x
 

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Tests and builds the application.
+
+set -e
+
+err="$(go fmt ./...)"
+if [[ -n $err ]]; then echo "go fmt: ${err}" && exit 1; fi
+
+err="$(go vet ./...)"
+if [[ -n $err ]]; then echo "go vet: ${err}" && exit 2; fi
+
+go test -v ./...
+go build -v
+
+exit 0
