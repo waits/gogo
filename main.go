@@ -35,6 +35,7 @@ func main() {
 	if *devMode {
 		log.Printf("Starting server at http://0.0.0.0:8080\n")
 		http.ListenAndServe("0.0.0.0:8080", nil)
+		return
 	}
 
 	log.Printf("Starting server at https://" + *host)
