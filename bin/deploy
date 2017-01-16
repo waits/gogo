@@ -28,6 +28,8 @@ ssh -i etc/id_ecdsa -o StrictHostKeyChecking=no $HOST <<-EOF
 	ln -nsf $DIR $ROOT/cur
 	sudo service gogo restart
 
+    curl -I https://go.waits.io
+
 	rm $TMP
 	cd $ROOT/rel && ls -t | tail -n +6 | xargs rm -rf
 EOF

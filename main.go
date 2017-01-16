@@ -40,7 +40,7 @@ func main() {
 
 	redir := "https://" + *host
 	log.Printf("Starting server at http://" + *host)
-	go http.ListenAndServe("0.0.0.0:8080", http.RedirectHandler(redir, 301))
+	go http.ListenAndServe("0.0.0.0:80", http.RedirectHandler(redir, 301))
 
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
