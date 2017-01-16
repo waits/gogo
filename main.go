@@ -2,20 +2,20 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"net/http"
 
 	"github.com/waits/gogo/handler"
 	"github.com/waits/gogo/model"
+	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/net/websocket"
 )
 
 var (
-	host     = flag.String("host", "go.waits.io", "server hostname")
-	devMode  = flag.Bool("development", false, "run in development mode")
-	certFile = flag.String("cert", "", "path to certificate chain")
-	keyFile  = flag.String("key", "", "path to private key")
+	host    = flag.String("host", "", "server hostname")
+	devMode = flag.Bool("development", false, "run in development mode")
 )
 
 func main() {
@@ -38,8 +38,17 @@ func main() {
 		return
 	}
 
-	log.Printf("Starting server at https://" + *host)
 	redir := "https://" + *host
-	go http.ListenAndServe("0.0.0.0:80", http.RedirectHandler(redir, 301))
-	http.ListenAndServeTLS("0.0.0.0:443", *certFile, *keyFile, nil)
+	log.Printf("Starting server at http://" + *host)
+	go http.ListenAndServe("0.0.0.0:8080", http.RedirectHandler(redir, 301))
+
+	m := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(*host),
+	}
+	s := &http.Server{
+		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
+	}
+	log.Printf("Starting server at https://" + *host)
+	log.Fatal(s.ListenAndServeTLS("", ""))
 }
