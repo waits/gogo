@@ -8,7 +8,7 @@ User=root
 Group=root
 WorkingDirectory=/var/www/gogo/cur
 
-ExecStart=/var/www/gogo/cur/gogo --host go.waits.io
+ExecStart=/var/www/gogo/cur/gogo --host go.waits.io --certs /var/www/gogo/certs
 
 [Install]
 WantedBy=multi-user.target

@@ -15,6 +15,7 @@ import (
 
 var (
 	host    = flag.String("host", "", "server hostname")
+	dir     = flag.String("certs", "", "directory to store certificates in")
 	devMode = flag.Bool("development", false, "run in development mode")
 )
 
@@ -45,6 +46,7 @@ func main() {
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(*host),
+		Cache:      autocert.DirCache(*dir),
 	}
 	s := &http.Server{
 		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
