@@ -9,7 +9,7 @@ ROOT=/var/www/gogo
 HASH=$(git rev-parse --short=7 HEAD)
 DIR=$ROOT/rel/$HASH
 TMP=/tmp/gogo-$HASH.tar.gz
-SERVICE_DIR=/lib/systemd/system
+SERVICE_DIR=/etc/systemd/system
 
 tar -czf gogo.tar.gz ./bin/backup ./static ./template ./gogo
 scp -i etc/id_ecdsa -o StrictHostKeyChecking=no gogo.tar.gz $HOST:$TMP
