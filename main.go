@@ -35,22 +35,25 @@ func main() {
 
 	if *devMode {
 		log.Printf("Starting server at http://0.0.0.0:8080\n")
-		http.ListenAndServe("0.0.0.0:8080", nil)
+		log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
 		return
 	}
-
-	redir := "https://" + *host
-	log.Printf("Starting server at http://" + *host)
-	go http.ListenAndServe("0.0.0.0:80", http.RedirectHandler(redir, 301))
 
 	m := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(*host),
 		Cache:      autocert.DirCache(*dir),
 	}
+
+	s80 := &http.Server{
+		Addr:    ":80",
+		Handler: m.HTTPHandler(nil),
+	}
+	go s80.ListenAndServe()
+
+	log.Printf("Starting server at https://" + *host)
 	s := &http.Server{
 		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
 	}
-	log.Printf("Starting server at https://" + *host)
 	log.Fatal(s.ListenAndServeTLS("", ""))
 }
