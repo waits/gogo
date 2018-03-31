@@ -16,7 +16,7 @@ import (
 var (
 	host    = flag.String("host", "", "server hostname")
 	dir     = flag.String("certs", "", "directory to store certificates in")
-	devMode = flag.Bool("development", false, "run in development mode")
+	devMode = flag.Bool("dev", false, "run in development mode")
 )
 
 func main() {
