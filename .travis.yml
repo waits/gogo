@@ -1,7 +1,7 @@
 language: go
 go:
-- 1.7.5
-- 1.8
+- "1.9.x"
+- "1.10.x"
 go_import_path: github.com/waits/gogo
 env: GIMME_OS=linux GIMME_ARCH=amd64
 services:
@@ -10,7 +10,7 @@ deploy:
   provider: script
   script: bin/deploy
   on:
-    go: 1.8
+    go: "1.10.x"
   skip_cleanup: true
 before_install:
 - openssl aes-256-cbc -K $encrypted_c4bc4c5f25a7_key -iv $encrypted_c4bc4c5f25a7_iv
