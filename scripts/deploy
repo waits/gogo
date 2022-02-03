@@ -11,7 +11,7 @@ DIR=$ROOT/rel/$HASH
 TMP=/tmp/gogo-$HASH.tar.gz
 SERVICE_DIR=/etc/systemd/system
 
-tar -czf gogo.tar.gz ./bin/backup ./static ./template ./gogo
+tar -czf gogo.tar.gz ./scripts/backup ./static ./template ./gogo
 scp -i etc/id_ecdsa -o StrictHostKeyChecking=no gogo.tar.gz $HOST:$TMP
 scp -i etc/id_ecdsa -o StrictHostKeyChecking=no etc/gogo.service $HOST:$SERVICE_DIR
 
@@ -23,7 +23,7 @@ ssh -i etc/id_ecdsa -o StrictHostKeyChecking=no $HOST <<-EOF
 	mkdir -p $DIR
 	tar -xzf $TMP -C $DIR --strip-components=1
 
-	$DIR/bin/backup
+	$DIR/scripts/backup
 
 	ln -nsf $DIR $ROOT/cur
 	sudo service gogo restart
