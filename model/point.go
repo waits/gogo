@@ -2,6 +2,13 @@ package model
 
 import "errors"
 
+const (
+	empty = iota
+	black = iota
+	white = iota
+	mixed = iota
+)
+
 // Point holds x and y coordinates of a point on a game board
 type Point struct {
 	X int
@@ -59,6 +66,35 @@ func (point Point) connectedDeadStones(grid [][]int, alreadyFound []Point) []Poi
 	}
 
 	return alreadyFound
+}
+
+// Searches for adjacent empty spaces. Returns a slice of empty points and the owning color.
+func (point Point) searchArea(grid [][]int, found []Point, color int) ([]Point, int) {
+	adjacentPoints := []Point{{point.X, point.Y - 1}, {point.X + 1, point.Y}, {point.X, point.Y + 1}, {point.X - 1, point.Y}}
+	found = append(found, point)
+
+	for _, p := range adjacentPoints {
+		if p.inSet(found) {
+			continue
+		} else if p.X < 0 || p.X > len(grid)-1 || p.Y < 0 || p.Y > len(grid)-1 {
+			continue
+		}
+
+		switch grid[p.Y][p.X] {
+		case empty:
+			found, color = p.searchArea(grid, found, color)
+		case color:
+			continue
+		default:
+			if color == empty {
+				color = grid[p.Y][p.X]
+			} else {
+				color = mixed
+			}
+		}
+	}
+
+	return found, color
 }
 
 // Returns true if a matching point is found in the slice

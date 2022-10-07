@@ -187,7 +187,7 @@ func (g *Game) Move(color string, p Point) error {
 
 	bstr := gridBytes(g.Board)
 	g.Last = strconv.Itoa(p.X*19 + p.Y)
-	g.save(len(captured), bstr)
+	g.save(len(captured), bstr, 0, 0)
 
 	return nil
 }
@@ -202,12 +202,14 @@ func (g *Game) Pass(color string) error {
 	}
 
 	g.Ko = -2
+	blackArea, whiteArea := 0, 0
 	if g.Last == "p" {
+		blackArea, whiteArea = g.scoreBoard()
 		g.Last = "f"
 	} else {
 		g.Last = "p"
 	}
-	g.save(0, "")
+	g.save(0, "", blackArea, whiteArea)
 
 	return nil
 }
@@ -218,7 +220,8 @@ func (g *Game) ZeroSize() int {
 }
 
 // Save persists the game to the database
-func (g *Game) save(cap int, grid string) {
+func (g *Game) save(cap int, grid string, blackPts int, whitePts int) {
+	log.Printf("save %d %d\n", blackPts, whitePts)
 	conn := pool.Get()
 	defer conn.Close()
 
@@ -229,12 +232,53 @@ func (g *Game) save(cap int, grid string) {
 	if cap > 0 {
 		conn.Send("HINCRBY", key, colors[1-g.Turn%2]+"Scr", cap)
 	}
+	if blackPts > 0 {
+		conn.Send("HINCRBY", key, "BlackScr", blackPts)
+	}
+	if whitePts > 0 {
+		conn.Send("HINCRBY", key, "WhiteScr", whitePts)
+	}
 	conn.Send("HINCRBY", key, "Turn", 1)
 	conn.Send("HSET", key, "Ko", g.Ko)
 	conn.Send("HSET", key, "Last", g.Last)
 	conn.Send("EXPIRE", key, staleGameTTL)
 	conn.Send("EXPIRE", "game:board:"+g.Key, staleGameTTL)
 	conn.Do("PUBLISH", key, "move")
+}
+
+// Returns area controlled by each color
+func (g *Game) scoreBoard() (blackArea int, whiteArea int) {
+	log.Printf("scoreBoard %d %d\n", blackArea, whiteArea)
+	countedPoints := make([]Point, 0, g.Size*g.Size)
+
+	for y, row := range g.Board {
+		for x, color := range row {
+			p := Point{x, y}
+			if p.inSet(countedPoints) {
+				continue
+			}
+
+			switch color {
+			case empty:
+				points, owner := p.searchArea(g.Board, nil, empty)
+				switch owner {
+				case black:
+					blackArea += len(points)
+				case white:
+					whiteArea += len(points)
+				}
+				countedPoints = append(countedPoints, points...)
+			case black:
+				blackArea += 1
+			case white:
+				whiteArea += 1
+			}
+		}
+	}
+
+	log.Printf("scoreBoard %d %d\n", blackArea, whiteArea)
+
+	return blackArea, whiteArea
 }
 
 func colorInt(color string) int {
