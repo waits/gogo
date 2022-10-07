@@ -10,16 +10,16 @@
   </p>
   <p>
     <label>Size</label>
-    <strong>{{.Size}}x{{.Size}}</strong>
+    <strong>{{.Data.Size}}x{{.Data.Size}}</strong>
   </p>
   <p>
     <label>Color</label>
-    <strong>{{if .Black}}White{{else}}Black{{end}}</strong>
+    <strong>{{if .Data.Black}}White{{else}}Black{{end}}</strong>
   </p>
-  {{if .Handicap}}
+  {{if .Data.Handicap}}
     <p>
       <label>Handicap</label>
-      <strong>{{.Handicap}}</strong>
+      <strong>{{.Data.Handicap}}</strong>
     </p>
   {{end}}
   <button type="submit">Start Game</button>

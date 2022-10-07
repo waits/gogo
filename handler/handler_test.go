@@ -63,6 +63,9 @@ func testBody(t *testing.T, rec *httptest.ResponseRecorder, expected string) {
 	if body := rec.Body.String(); !strings.Contains(body, expected) {
 		t.Errorf("handler returned unexpected body: did not contain %v", expected)
 	}
+	if body := rec.Body.String(); strings.Contains(body, "template:") {
+		t.Errorf("handler returned body containing template error: %v", body)
+	}
 }
 
 func testRedirect(t *testing.T, rec *httptest.ResponseRecorder, expected string) {
@@ -93,9 +96,19 @@ func TestCreateGame(t *testing.T) {
 }
 
 func TestJoinGame(t *testing.T) {
-	rec := recordRequest(t, Game, "PUT", "/game/2", "name=Guy")
+	rec := recordRequest(t, Game, "GET", "/game/2", "")
+	testStatusCode(t, rec, http.StatusOK)
+	testBody(t, rec, "Join Game")
+
+	rec = recordRequest(t, Game, "PUT", "/game/2", "name=Guy")
 	testStatusCode(t, rec, http.StatusSeeOther)
 	testRedirect(t, rec, "/game/2")
+}
+
+func TestWatchGame(t *testing.T) {
+	rec := recordRequest(t, Game, "GET", "/game/1", "")
+	testStatusCode(t, rec, http.StatusOK)
+	testBody(t, rec, "Aaron vs. Job")
 }
 
 func TestShowGame(t *testing.T) {

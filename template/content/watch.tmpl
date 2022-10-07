@@ -1,13 +1,13 @@
-{{define "title"}}{{if eq .Last "f"}}Game Over - {{end}}{{.Black}} vs. {{.White}} - Go{{end}}
+{{define "title"}}{{if eq .Data.Last "f"}}Game Over - {{end}}{{.Data.Black}} vs. {{.Data.White}} - Go{{end}}
 
 {{define "content"}}
-<h1 id="title">Turn <span id="turn">{{.Turn}}{{if eq .Last "f"}}/F{{end}}</span> – {{.Black}} vs. {{.White}}</h1>
+<h1 id="title">Turn <span id="turn">{{.Data.Turn}}{{if eq .Data.Last "f"}}/F{{end}}</span> – {{.Data.Black}} vs. {{.Data.White}}</h1>
 
-<p><strong>Captured:</strong> black <span id="blackscr">{{.BlackScr}}</span>, white <span id="whitescr">{{.WhiteScr}}</span></p>
+<p><strong>Captured:</strong> black <span id="blackscr">{{.Data.BlackScr}}</span>, white <span id="whitescr">{{.Data.WhiteScr}}</span></p>
 
 <div id="board" class="inactive">
-  {{$s := .ZeroSize}}
-  {{range $y, $row := .Board}}
+  {{$s := .Data.ZeroSize}}
+  {{range $y, $row := .Data.Board}}
   <div class="row">
     {{range $x, $stone := $row}}
     <div class="cell">
@@ -24,11 +24,11 @@
 {{end}}
 
 {{define "script"}}
-{{if ne .Last "f"}}
+{{if ne .Data.Last "f"}}
   <script>
     'use strict';
     var board = document.getElementById('board');
-    board && new GameController(board, null, null, {{.Black}}, {{.White}});
+    board && new GameController(board, null, null, {{.Data.Black}}, {{.Data.White}});
   </script>
 {{end}}
 {{end}}
