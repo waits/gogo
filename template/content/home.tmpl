@@ -6,7 +6,7 @@
 
   <h4>Recently started games</h4>
   <ul>
-    {{range $index, $game := .}}
+    {{range $index, $game := .Data}}
       <li><a href="/game/{{.Key}}">{{.Black}} vs. {{.White}} - {{.Size}}x{{.Size}} - Turn {{.Turn}}</a></li>
     {{else}}
       <em>No games are in progress.</em>

@@ -75,6 +75,7 @@ func TestStatic(t *testing.T) {
 	rec := recordRequest(t, Static, "GET", "/", "")
 	testStatusCode(t, rec, http.StatusOK)
 	testBody(t, rec, "No games are in progress.")
+	testBody(t, rec, "https://github.com/waits/gogo/commit/main")
 
 	rec = recordRequest(t, Static, "GET", "/help", "")
 	testStatusCode(t, rec, http.StatusOK)
@@ -102,6 +103,7 @@ func TestShowGame(t *testing.T) {
 	rec := recordRequest(t, Game, "GET", "/game/1", "", c)
 	testStatusCode(t, rec, http.StatusOK)
 	testBody(t, rec, "Aaron vs. Job")
+	testBody(t, rec, "https://github.com/waits/gogo/commit/main")
 }
 
 func TestUpdateGame(t *testing.T) {
