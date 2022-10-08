@@ -10,7 +10,7 @@ var GameController = function(board, passBtn, key, black, white) {
     }
     if (passBtn) {
         var failedAttempts = 0, timer, turn;
-        var color = document.cookie.substr(document.cookie.indexOf(key) + 17, 5);
+        var color = document.cookie.substr(document.cookie.indexOf(key) + 10, 5);
         board.classList.add(color);
         passBtn.addEventListener('click', pass);
     }
