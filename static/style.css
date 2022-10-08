@@ -83,6 +83,9 @@ section {
   display: block;
   opacity: 0.5;
 }
+#board.inactive .stone.hide {
+  display: none;
+}
 .black {
   background-color: black;
 }

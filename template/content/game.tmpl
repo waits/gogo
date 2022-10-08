@@ -11,7 +11,7 @@
   {{if ne .Data.Last "f"}}<p><button id="pass">Pass</button></p>{{end}}
 {{end}}
 
-<div id="board">
+<div id="board" class="inactive">
   {{$s := .Data.ZeroSize}}
   {{range $y, $row := .Data.Board}}
   <div class="row">

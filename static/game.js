@@ -45,8 +45,8 @@ var GameController = function(board, passBtn, key, black, white) {
                 var cell = cells[y*g.Board.length+x];
                 var stone = cell.children[1];
                 switch (g.Board[y][x]) {
-                    case 1: stone.classList.add('black'); break;
-                    case 2: stone.classList.add('white'); break;
+                    case 1: stone.classList.add('black'); stone.classList.remove('hide'); break;
+                    case 2: stone.classList.add('white'); stone.classList.remove('hide'); break;
                     default:
                         stone.classList.remove('black', 'white');
                         stone.classList.add('hide');
@@ -60,6 +60,7 @@ var GameController = function(board, passBtn, key, black, white) {
         }
 
         if (color && (g.Turn % 2 == 1) == (color == 'black') && !document.getElementById('turn-notice')) {
+            board.classList.remove("inactive");
             notice = document.createElement('div');
             notice.id = 'turn-notice';
             notice.className = 'notice';
@@ -96,6 +97,7 @@ var GameController = function(board, passBtn, key, black, white) {
 
     function clickHandler(event) {
         if (board.classList.contains('disabled') || board.classList.contains('inactive')) return;
+        if (this.getElementsByClassName('stone hide').length == 0) return;
 
         var x = indexOf(this);
         var y = indexOf(this.parentNode);
@@ -112,7 +114,11 @@ var GameController = function(board, passBtn, key, black, white) {
     }
 
     function response() {
-        if (this.status >= 300) alert(this.response);
+        if (this.status >= 300) {
+            alert(this.response);
+            return;
+        }
         if (notice) notice.remove();
+        board.classList.add("inactive");
     }
 }
