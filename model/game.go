@@ -2,7 +2,7 @@ package model
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
+	"encoding/base32"
 	"errors"
 	"github.com/garyburd/redigo/redis"
 	"log"
@@ -317,12 +317,11 @@ func gridBytes(board [][]int) string {
 	return string(grid[:bytesize])
 }
 
-// Returns the SHA-224 checksum of the game parameters truncated to 64 bits
+// Returns the checksum of the game parameters truncated to 48 bits
 func hashGameParams(params ...string) string {
 	time := time.Now().Unix()
 	pstr := strings.Join(params, "\n")
 	uniq := []byte(strconv.FormatInt(time, 10) + pstr)
 	checksum := sha256.Sum224(uniq)
-	hexid := hex.EncodeToString(checksum[:8])
-	return hexid
+	return strings.ToLower(base32.HexEncoding.WithPadding(base32.NoPadding).EncodeToString(checksum[:6]))
 }
