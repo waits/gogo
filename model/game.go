@@ -55,7 +55,7 @@ func New(name string, color string, size int, hdcp int) (*Game, error) {
 	conn := pool.Get()
 	defer conn.Close()
 
-	conn.Send("HMSET", args...)
+	conn.Send("HSET", args...)
 	_, err := conn.Do("EXPIRE", "game:"+key, staleGameTTL)
 	if err != nil {
 		return nil, errors.New("new game: could not connect to database")
