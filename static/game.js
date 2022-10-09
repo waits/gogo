@@ -10,7 +10,7 @@ var GameController = function(board, passBtn, key, black, white) {
     }
     if (passBtn) {
         var failedAttempts = 0, timer, turn;
-        var color = document.cookie.substr(document.cookie.indexOf(key) + key.length + 1, 5);
+        var color = getCookie(key);
         board.classList.add(color);
         passBtn.addEventListener('click', pass);
     }
@@ -104,6 +104,10 @@ var GameController = function(board, passBtn, key, black, white) {
         var url = window.location.href;
         var data = 'color=' + color + '&x=' + x + '&y=' + y;
         ajax('PUT', url, data, response);
+    }
+
+    function getCookie(key) {
+        return document.cookie.split('; ').find((row) => row.startsWith(key))?.split('=')[1];
     }
 
     function pass(event) {
