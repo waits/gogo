@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base32"
 	"errors"
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"log"
 	"strconv"
@@ -58,7 +59,8 @@ func New(name string, color string, size int, hdcp int) (*Game, error) {
 	conn.Send("HSET", args...)
 	_, err := conn.Do("EXPIRE", "game:"+key, staleGameTTL)
 	if err != nil {
-		return nil, errors.New("new game: could not connect to database")
+		log.Printf("new game: %s", err)
+		return nil, fmt.Errorf("new game: %w", err)
 	}
 
 	if hdcp > 0 {
