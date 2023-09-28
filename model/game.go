@@ -5,11 +5,14 @@ import (
 	"encoding/base32"
 	"errors"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
 	"log"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/garyburd/redigo/redis"
+	"github.com/waits/gogo/model/game"
 )
 
 var staleGameTTL = 60 * 60 * 24 * 7
@@ -19,6 +22,7 @@ var hcPts = [9]Point{{15, 3}, {3, 15}, {15, 15}, {3, 3}, {9, 9}, {3, 9}, {15, 9}
 // Game holds the parameters representing a game of Go
 type Game struct {
 	Key      string `redis:"-"`
+	Type     game.Type
 	Black    string
 	White    string
 	Size     int
@@ -32,7 +36,7 @@ type Game struct {
 }
 
 // New creates a game using a hash of the game parameters
-func New(name string, color string, size int, hdcp int) (*Game, error) {
+func New(gtype game.Type, name string, color string, size int, hdcp int) (*Game, error) {
 	if size > 19 || size < 9 || size%2 == 0 {
 		return nil, errors.New("New game: invalid board size")
 	} else if len(name) == 0 {
@@ -44,12 +48,20 @@ func New(name string, color string, size int, hdcp int) (*Game, error) {
 	} else if hdcp > 0 && size != 19 {
 		return nil, errors.New("New game: handicap only available on 19x19 boards")
 	}
-	key := hashGameParams(name, color, strconv.Itoa(size), strconv.Itoa(hdcp))
-	g := &Game{Key: key, Size: size, Turn: 1, Ko: -1, Handicap: hdcp}
+	key := hashGameParams(gtype.String(), name, color, strconv.Itoa(size), strconv.Itoa(hdcp))
+	g := &Game{Key: key, Type: gtype, Size: size, Turn: 1, Ko: -1, Handicap: hdcp}
 	if color == "black" {
 		g.Black = name
+		fmt.Printf("%s\n", gtype)
+		if gtype == game.AI {
+			g.White = "AI"
+		}
+		fmt.Printf("%s\n", g.White)
 	} else {
 		g.White = name
+		if gtype == game.AI {
+			g.Black = "AI"
+		}
 	}
 	args := redis.Args{}.Add("game:" + key).AddFlat(g)
 
@@ -191,6 +203,18 @@ func (g *Game) Move(color string, p Point) error {
 	g.Last = strconv.Itoa(p.X*19 + p.Y)
 	g.save(len(captured), bstr, 0, 0)
 
+	if g.Type == game.AI && color == "black" {
+		g, err = Load(g.Key)
+		if err != nil {
+			return err
+		}
+
+		err = g.Move("white", randomEmptyPoint(g.Board))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -212,6 +236,18 @@ func (g *Game) Pass(color string) error {
 		g.Last = "p"
 	}
 	g.save(0, "", blackArea, whiteArea)
+
+	if g.Type == game.AI && color == "black" {
+		g, err := Load(g.Key)
+		if err != nil {
+			return err
+		}
+
+		err = g.Pass("white")
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -317,6 +353,26 @@ func gridBytes(board [][]int) string {
 		}
 	}
 	return string(grid[:bytesize])
+}
+
+// Returns a random empty point on board
+func randomEmptyPoint(board [][]int) Point {
+	l := len(board)
+	emptyPoints := make([]Point, 0, l*l)
+
+	for y, row := range board {
+		for x, val := range row {
+			if val == 0 {
+				emptyPoints = append(emptyPoints, Point{x, y})
+			}
+		}
+	}
+
+	if len(emptyPoints) == 0 {
+		panic("randomEmptyPoint: no empty points")
+	}
+
+	return emptyPoints[rand.Intn(len(emptyPoints))]
 }
 
 // Returns the checksum of the game parameters truncated to 48 bits

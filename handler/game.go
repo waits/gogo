@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/waits/gogo/model"
+	"github.com/waits/gogo/model/game"
 	"golang.org/x/net/websocket"
 )
 
@@ -58,12 +59,17 @@ func Live(ws *websocket.Conn) {
 }
 
 func createGame(env *Env, w http.ResponseWriter, r *http.Request) (int, error) {
+	gameType, err := game.GetType(r.FormValue("type"))
+	if err != nil {
+		return http.StatusBadRequest, err
+	}
+
 	size, _ := strconv.Atoi(r.FormValue("size"))
 	handi, _ := strconv.Atoi(r.FormValue("handicap"))
 	name := r.FormValue("name")
 	color := r.FormValue("color")
 
-	game, err := model.New(name, color, size, handi)
+	game, err := model.New(gameType, name, color, size, handi)
 	if err != nil {
 		return http.StatusBadRequest, err
 	}

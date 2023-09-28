@@ -4,8 +4,13 @@
 
 <form method="post" action="/game/">
   <p>
+    <label>Game type</label>
+    <label><input type="radio" name="type" value="online" checked> Online multiplayer</label>
+    <label><input type="radio" name="type" value="ai"> AI opponent</label>
+  </p>
+  <p>
     <label>Your name</label>
-    <input name="name" placeholder="e.g. Alice" />
+    <input name="name" placeholder="Required" />
   </p>
   <p>
     <label>Your color</label>
