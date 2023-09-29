@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/waits/gogo/model/game"
 )
 
 var games = map[string]Game{
-	"1": {Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Aaron", White: "Job"},
-	"2": {Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Frank"},
-	"3": {Size: 13, Turn: 1, Ko: -1, Handicap: 0, Black: "Blake", White: "Tracy"},
+	"1": {Type: game.Online, Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Aaron", White: "Job"},
+	"2": {Type: game.Online, Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Frank"},
+	"3": {Type: game.Online, Size: 13, Turn: 1, Ko: -1, Handicap: 0, Black: "Blake", White: "Tracy"},
 }
 
 // Flushes the database and sets up test data
@@ -28,7 +29,7 @@ func init() {
 }
 
 func TestNew(t *testing.T) {
-	_, err := New("Andy", "white", 13, 0)
+	_, err := New(game.Online, "Andy", "white", 13, 0)
 	if err != nil {
 		t.Error(err.Error())
 	}

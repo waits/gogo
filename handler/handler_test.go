@@ -8,6 +8,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/waits/gogo/model"
+	"github.com/waits/gogo/model/game"
 )
 
 var tmpls = LoadTemplates("../template/")
@@ -21,8 +22,8 @@ func init() {
 
 	conn.Send("FLUSHDB")
 	games := []model.Game{
-		{Key: "1", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Aaron", White: "Job"},
-		{Key: "2", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Frank"},
+		{Type: game.Online, Key: "1", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Aaron", White: "Job"},
+		{Type: game.Online, Key: "2", Size: 9, Turn: 1, Ko: -1, Handicap: 0, Black: "Frank"},
 	}
 	for _, g := range games {
 		args := redis.Args{}.Add("game:" + g.Key).AddFlat(g)
@@ -90,7 +91,7 @@ func TestStatic(t *testing.T) {
 }
 
 func TestCreateGame(t *testing.T) {
-	rec := recordRequest(t, Game, "POST", "/game", "name=Marco&color=white&size=19&handicap=3")
+	rec := recordRequest(t, Game, "POST", "/game", "type=online&name=Marco&color=white&size=19&handicap=3")
 	testStatusCode(t, rec, http.StatusSeeOther)
 	testRedirect(t, rec, "/game/")
 }
